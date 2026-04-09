@@ -22,6 +22,7 @@
 
 Multipart: **`audio`**, **`image`** (required). Returns **202** with `job_id`, `pending`.
 
+- **Billing:** **$5/hour** of **output** video duration (same cents/sec as realtime passthrough), prorated.
 - Combined upload limit ~**50 MB** (see live docs).
 - **BYOB TTS:** generate speech with any provider; pass the audio file here.
 
@@ -50,17 +51,15 @@ Presigned download JSON: `url`, `content_type`, `expires_in`.
 **JSON:** `{ "mode": "conversation"|"passthrough", "face_url": "https://..." }`  
 **Multipart:** `mode`, optional `face` file.
 
-**200:** `session_id`, `livekit_url`, `token`, `room`, `mode`, `max_duration_seconds`, **`pricing`** (string).
+**200:** `session_id`, `livekit_url`, `token`, `room`, `mode`, `max_duration_seconds`, **`pricing`** (`"$10/hour..."` for conversation, `"$5/hour..."` for passthrough).
 
 ### `GET /v1/realtime/session/{id}`
 
 `status`, `room`, `started_at`, `ended_at`, `duration_seconds`, `max_duration_seconds`.
 
-### `PATCH /v1/realtime/session/{id}` — **face swap**
+### `PATCH /v1/realtime/session/{id}`
 
-**Face swap:** update the avatar’s reference face **during an active session** without tearing down the room (hot-swap / mid-call face change).
-
-**Multipart:** field **`face`** (image file). Use **`face_url` on `POST` create** for HTTPS URLs; this PATCH path expects an uploaded **`face`** file (see live API docs if your stack exposes JSON `face_url` on PATCH).
+**Multipart only:** field **`face`** (file). No `face_url` on PATCH (security). Use POST create for HTTPS URLs.
 
 **200:** `face_updated`, `metadata_pushed`, `message`.
 

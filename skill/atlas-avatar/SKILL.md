@@ -1,6 +1,6 @@
 ---
 name: atlas_avatar
-description: "Create realtime AI avatar sessions (LiveKit WebRTC), mid-session face swap (PATCH realtime session), and offline lip-sync avatar videos using the Atlas API by North Model Labs. Use when the user asks for Atlas avatar, face swap, hot-swap face, talking head, realtime avatar, lip sync, BYOB TTS + /v1/generate, or GPU avatar rendering."
+description: "Create realtime AI avatar sessions (LiveKit WebRTC) and offline lip-sync avatar videos using the Atlas API by North Model Labs. Use when the user asks for Atlas avatar, talking head, realtime avatar, face animation, video from audio+image, lip sync, BYOB TTS + /v1/generate, or GPU avatar rendering."
 version: "1.0.1"
 tags: ["avatar", "video", "realtime", "livekit", "lip-sync", "atlas", "gpu", "openclaw"]
 author: "northmodellabs"
@@ -61,7 +61,7 @@ curl -sS -X POST "${ATLAS_API_BASE:-https://api.atlasv1.com}/v1/generate" \
   -F "image=@face.jpg"
 ```
 
-**202** → `job_id`, `status: pending`. **Max ~50 MB** combined upload (see live docs for exact limits).
+**202** → `job_id`, `status: pending`. **Max ~50 MB** combined upload (see live docs for exact limits). **Billing:** **$5/hour** of output video duration (same rate as realtime passthrough), prorated to the second.
 
 ### Webhook instead of polling (multipart)
 
@@ -120,7 +120,7 @@ curl -sS -X POST "${ATLAS_API_BASE:-https://api.atlasv1.com}/v1/realtime/session
 
 ### Response 200
 
-Includes `session_id`, `livekit_url`, `token`, `room`, `mode`, `max_duration_seconds`, and **`pricing`** (string, e.g. `"$10/hour, prorated per second"` or passthrough rate).
+Includes `session_id`, `livekit_url`, `token`, `room`, `mode`, `max_duration_seconds`, and **`pricing`** (string: `"$10/hour, prorated per second"` for conversation, `"$5/hour, prorated per second"` for passthrough).
 
 ### Session lifecycle
 
@@ -131,11 +131,9 @@ curl -sS "${ATLAS_API_BASE:-https://api.atlasv1.com}/v1/realtime/session/SESSION
 
 Response includes `max_duration_seconds` among other fields.
 
-### PATCH — **face swap** (change avatar face mid-call, no disconnect)
+### PATCH — hot-swap face (multipart **file only**)
 
-This endpoint **is face swap**: replace the reference face **while the LiveKit session stays connected** — the avatar transitions to the new look in real time (rate limited).
-
-Server accepts **`face`** as multipart **file** (HTTPS `face_url` is for **POST create**, not PATCH on this deployment).
+Server accepts **`face`** as uploaded image (not arbitrary URLs on PATCH). Use `face_url` only on **create** (POST).
 
 ```bash
 curl -sS -X PATCH "${ATLAS_API_BASE:-https://api.atlasv1.com}/v1/realtime/session/SESSION_ID" \
