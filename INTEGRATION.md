@@ -1,6 +1,6 @@
 # Integrating Atlas Avatar with OpenClaw
 
-This document is for **developers** wiring OpenClaw (or any OpenAI Chat Completions–compatible client) together with Atlas GPU avatars.
+Part of the **[avatarclaw](https://github.com/NorthModelLabs/avatarclaw)** repository. This document is for **developers** wiring OpenClaw (or any OpenAI Chat Completions–compatible client) together with Atlas GPU avatars.
 
 ## 1. Roles
 
