@@ -1,0 +1,27 @@
+# Optional ClawHub / OpenClaw bundle manifest (some publish flows use skill.yaml).
+# Copy to skill.yaml and adjust before publish if your tooling requires it.
+#
+# Reference: https://docs.openclaw.ai/tools/clawhub
+
+name: atlas-avatar
+version: 1.0.0
+author: northmodellabs
+description: >
+  Atlas GPU avatars — realtime LiveKit sessions and offline lip-sync video
+  via the Atlas API.
+
+permissions:
+  - network
+
+config:
+  # At runtime, map this to env ATLAS_API_KEY if your publish flow does not inject it automatically.
+  atlas_api_key:
+    type: string
+    required: true
+    description: Atlas API key (ak_...)
+
+entryPoint:
+  type: natural
+  prompt: |
+    Load instructions from SKILL.md in this bundle. Teach the agent to use
+    curl with ATLAS_API_BASE and ATLAS_API_KEY for Atlas avatar endpoints.
