@@ -5,7 +5,10 @@ Official integration pack for using **North Model Labs Atlas** (realtime + offli
 This repo contains:
 
 - **`core/`** — shared **`atlas_api.py`** + **`atlas_cli.py`** (full REST CLI).
-- **`skills/atlas-avatar/`** — OpenClaw skill: `SKILL.md`, **`scripts/atlas_session.py`** (Pika-style `start` / `leave` / `face-swap`), `requirements.txt`, references. Install locally or publish to [ClawHub](https://docs.openclaw.ai/tools/clawhub).
+- **`skills/atlas-avatar/`** — Core Atlas API skill + `atlas_session.py`.
+- **`skills/atlas-bridge-slack`** / **`atlas-bridge-discord`** — post session summaries via **webhooks** (working).
+- **`skills/atlas-bridge-google-meet`** / **`atlas-bridge-zoom`** — **honest integration guides** (no Meet/Zoom join from this repo).
+- See **`skills/CONNECTORS.md`** for the table and copy instructions.
 - **`INTEGRATION.md`** — wiring Atlas with OpenClaw or a custom LLM.
 
 **Python:** `pip install -r core/requirements.txt` (or `skills/atlas-avatar/requirements.txt`). Scripts call **Atlas HTTP only** — they do not join Google Meet; connect **LiveKit** in your app after `start`.
@@ -97,6 +100,8 @@ Atlas **realtime** sessions use **LiveKit**: your client (or demo app) connects 
 | `skills/atlas-avatar/scripts/atlas_session.py` | Pika-style verbs for agents |
 | `skills/atlas-avatar/requirements.txt` | Same deps as `core/` |
 | `skills/atlas-avatar/references/api-reference.md` | Endpoint reference |
+| `skills/atlas-bridge-*` | Slack/Discord webhooks + Meet/Zoom guides |
+| `skills/CONNECTORS.md` | Connector overview |
 | `INTEGRATION.md` | Developer integration |
 | `.env.example` | Env var names |
 | `scripts/verify-env.sh` | Optional health + `/v1/me` |
