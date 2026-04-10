@@ -1,141 +1,103 @@
-# avatarclaw
+# Atlas Avatar × OpenClaw
 
-**North Model Labs Atlas** skills and tooling for **[OpenClaw](https://docs.openclaw.ai)** (and other agents that load `SKILL.md`): realtime **LiveKit** avatars, offline lip-sync video, and a **unified Python CLI** against [Atlas API v8](https://api.atlasv1.com).
+Official integration pack for using **North Model Labs Atlas** (realtime + offline GPU avatars) from **[OpenClaw](https://docs.openclaw.ai)** agents.
 
-| | |
-|:--|:--|
-| **Repository** | [NorthModelLabs/avatarclaw](https://github.com/NorthModelLabs/avatarclaw) *(you can rename the GitHub repo; keep `core/` + `skills/` layout)* |
-| **API base** | `https://api.atlasv1.com` |
-| **Dashboard** | [API keys](https://dashboard.northmodellabs.com/dashboard/keys) |
+This repo contains:
 
----
+- **`skill/`** — OpenClaw skill (`SKILL.md` + reference docs) you can install locally or publish to [ClawHub](https://docs.openclaw.ai/tools/clawhub).
+- **Integration guides** — how to wire Atlas as the avatar layer while OpenClaw (or any OpenAI-compatible provider) handles reasoning.
 
-## Layout (Pika-Skills–style monorepo)
+## Quick start (OpenClaw users)
 
-| Path | Purpose |
-|------|---------|
-| **`core/atlas_cli.py`** | **Foundation** — one CLI for Atlas REST (JSON to stdout, stable exit codes). |
-| **`core/requirements.txt`** | `requests` — `pip install -r core/requirements.txt` (prefer a **venv** on macOS). |
-| **`skills/atlas-avatar/`** | OpenClaw **skill**: `SKILL.md`, `references/api-reference.md`, `scripts/run_atlas_cli.py` (delegates to `core/`). |
-| **`INTEGRATION.md`** | Developer integration notes. |
-| **`scripts/verify-env.sh`** | Optional `GET /v1/health` + `GET /v1/me`. |
-| **`skill.yaml.example`** | Optional ClawHub manifest. |
+1. Copy the skill into your OpenClaw skills directory (see [OpenClaw: Creating skills](https://docs.openclaw.ai/tools/creating-skills)):
 
-Future **connector** skills (Meet, Discord, etc.) can live alongside `skills/atlas-avatar/` and call the same **`core/`** CLI or import shared helpers.
+   ```bash
+   mkdir -p ~/.openclaw/workspace/skills
+   cp -R skill/atlas-avatar ~/.openclaw/workspace/skills/
+   ```
 
----
+2. Set your API key:
 
-## What are skills?
+   ```bash
+   export ATLAS_API_KEY="ak_..."   # from Atlas dashboard
+   ```
 
-Each skill is a folder with a **`SKILL.md`** the agent reads for *when* and *how* to use Atlas. This repo adds a **shared Python core** so agents run **`python3 core/atlas_cli.py …`** instead of hand-assembling `curl` (curl remains documented in the skill as a fallback).
+3. Optionally set a custom API base (staging / self-hosted):
 
----
+   ```bash
+   export ATLAS_API_BASE="https://api.atlasv1.com"
+   ```
 
-## Dashboard: API key
+4. Start a new OpenClaw session (`/new`) and ask for a realtime avatar session or offline video generation. The agent will follow `SKILL.md`.
 
-1. Open **[API keys](https://dashboard.northmodellabs.com/dashboard/keys)**.
-2. Add a **payment method** if required.
-3. Create a key → export `ATLAS_API_KEY`. Never commit it.
+## Publish to ClawHub
 
 ```bash
-export ATLAS_API_KEY="your_key"
-export ATLAS_API_BASE="https://api.atlasv1.com"   # optional
+npm i -g clawhub
+clawhub auth
+clawhub skill publish ./skill/atlas-avatar \
+  --slug atlas-avatar \
+  --name "Atlas Avatar" \
+  --version 1.0.0 \
+  --tags latest
 ```
 
-**Smoke check:**
+Users install with:
 
 ```bash
-cp .env.example .env   # edit; do not commit
-source .env 2>/dev/null || true
-./scripts/verify-env.sh
+clawhub install atlas-avatar
 ```
 
----
-
-## Python CLI (core)
-
-```bash
-python3 -m venv .venv && source .venv/bin/activate   # recommended (PEP 668–safe)
-pip install -r core/requirements.txt
-
-python3 core/atlas_cli.py --help
-python3 core/atlas_cli.py health
-python3 core/atlas_cli.py me
-python3 core/atlas_cli.py realtime create --mode conversation --face-url "https://example.com/face.jpg"
-python3 core/atlas_cli.py jobs wait JOB_ID
-```
-
-**Exit codes:** `0` ok, `2` config/validation, `3` API HTTP error.
-
----
-
-## Install the OpenClaw skill
-
-[Creating skills](https://docs.openclaw.ai/tools/creating-skills):
-
-```bash
-mkdir -p ~/.openclaw/workspace/skills
-cp -R skills/atlas-avatar ~/.openclaw/workspace/skills/
-```
-
-**Full monorepo clone** is recommended so `core/atlas_cli.py` exists. If you copy **only** the skill folder, set **`ATLAS_AGENT_REPO`** to the absolute path of the repo root that contains `core/`, and use:
-
-```bash
-python3 ~/.openclaw/workspace/skills/atlas-avatar/scripts/run_atlas_cli.py me
-```
-
----
-
-## Sample apps & npm SDK
-
-| Resource | What it is |
-|:--|:--|
-| **[atlas-offline-example](https://github.com/NorthModelLabs/atlas-offline-example)** | Next.js offline pipeline. |
-| **[atlas-realtime-example](https://github.com/NorthModelLabs/atlas-realtime-example)** | Next.js realtime + LLM. |
-| **[@northmodellabs/atlas-react](https://www.npmjs.com/package/@northmodellabs/atlas-react)** | `useAtlasSession()` React hook. |
-
----
+(Exact `clawhub` flags may vary by CLI version — run `clawhub --help`.)
 
 ## Architecture
 
 ```
- OpenClaw (agent)  →  SKILL.md + optional core/atlas_cli.py
-                              ↓
-                    Atlas API (LiveKit + job queue)
+┌─────────────────┐     OpenAI-compatible      ┌──────────────────┐
+│  OpenClaw       │ ─────────────────────────► │  LLM provider    │
+│  (agent brain)  │                            │  (optional swap) │
+└────────┬────────┘                            └──────────────────┘
+         │
+         │  SKILL.md teaches the agent to call Atlas REST API
+         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Atlas API (https://api.atlasv1.com)                            │
+│  • POST /v1/realtime/session  → LiveKit URL + token + room      │
+│  • POST /v1/generate          → async avatar video job          │
+│  • TTS / jobs / session lifecycle (see references/api-reference) │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+   GPU pods (warping model) + LiveKit Cloud (WebRTC)
 ```
 
-**Billing (API):** **$5/hour** prorated — realtime **passthrough** + offline **`/v1/generate`** output; **$10/hour** prorated — realtime **conversation**.
+Atlas **realtime** sessions use **LiveKit**: your client (or demo app) connects with the returned `livekit_url`, `token`, and `room`. The Atlas agent worker handles STT → LLM → TTS → avatar on the hosted side in `conversation` mode, or you stream audio in `passthrough` mode.
 
----
+**Billing (API):** **$4/hour** prorated to the second for realtime (**conversation** and **passthrough**) and for **offline** `/v1/generate` output duration (same cents-per-second rate).
 
-## Publish to ClawHub (optional)
+## Repo layout
 
-```bash
-npm i -g clawhub
-clawhub login
-clawhub skill publish ./skills/atlas-avatar \
-  --slug atlas-avatar \
-  --name "Atlas Avatar" \
-  --version 1.0.2 \
-  --changelog "Monorepo: core CLI + skills/" \
-  --tags latest
-```
+| Path | Purpose |
+|------|---------|
+| `skill/atlas-avatar/SKILL.md` | OpenClaw skill — instructions + curl examples |
+| `skill/atlas-avatar/references/api-reference.md` | Detailed endpoint reference |
+| `.env.example` | Environment variables for scripts / docs |
+| `scripts/verify-env.sh` | Optional: checks `ATLAS_API_KEY` and hits `GET /v1/health` |
 
----
+## Get an API key
+
+Create keys from the Atlas dashboard (see your product URL, e.g. `dashboard.atlasv1.com`). Keys look like `ak_` + hex.
 
 ## Security
 
-- Do not commit `.env` or API keys. Do not log LiveKit JWTs.
-
----
+- Never commit real API keys. Use `.env` locally and CI secrets in automation.
+- The skill uses `curl` with `Authorization: Bearer`. Ensure untrusted input is not passed into shell commands without sanitization (OpenClaw agents should substitute values safely; for production plugins prefer a typed OpenClaw plugin instead of raw shell).
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
 
----
-
 ## Support
 
-- **Atlas:** [North Model Labs](https://northmodellabs.com) dashboard / support.  
-- **OpenClaw:** [docs.openclaw.ai](https://docs.openclaw.ai).
+- Atlas API issues: your Atlas support / dashboard.
+- OpenClaw: [docs.openclaw.ai](https://docs.openclaw.ai).

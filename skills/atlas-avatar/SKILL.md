@@ -91,7 +91,7 @@ curl -sS -X POST "${ATLAS_API_BASE:-https://api.atlasv1.com}/v1/generate" \
   -F "image=@face.jpg"
 ```
 
-**202** → `job_id`, `status: pending`. **Max ~50 MB** combined. **Billing:** **$5/hour** of output video duration (passthrough rate), prorated.
+**202** → `job_id`, `status: pending`. **Max ~50 MB** combined. **Billing:** **$4/hour** of output video duration (same rate as realtime), prorated.
 
 **Webhook:** header `X-Callback-URL: https://...` on the same POST.
 
@@ -131,7 +131,7 @@ curl -sS -X POST "${ATLAS_API_BASE:-https://api.atlasv1.com}/v1/realtime/session
   -F "face=@/path/to/face.jpg"
 ```
 
-**200:** `session_id`, `livekit_url`, `token`, `room`, `pricing` (`$10/hour…` conversation, `$5/hour…` passthrough).
+**200:** `session_id`, `livekit_url`, `token`, `room`, `pricing` (`$4/hour, prorated per second` for both modes).
 
 ### Session lifecycle
 
