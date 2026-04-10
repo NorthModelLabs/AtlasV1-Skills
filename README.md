@@ -4,7 +4,7 @@ Official integration pack for using **North Model Labs Atlas** (realtime + offli
 
 This repo contains:
 
-- **`skill/`** — OpenClaw skill (`SKILL.md` + reference docs) you can install locally or publish to [ClawHub](https://docs.openclaw.ai/tools/clawhub).
+- **`skills/atlas-avatar/`** — OpenClaw skill (`SKILL.md` + reference docs) you can install locally or publish to [ClawHub](https://docs.openclaw.ai/tools/clawhub).
 - **Integration guides** — how to wire Atlas as the avatar layer while OpenClaw (or any OpenAI-compatible provider) handles reasoning.
 
 ## Quick start (OpenClaw users)
@@ -13,7 +13,7 @@ This repo contains:
 
    ```bash
    mkdir -p ~/.openclaw/workspace/skills
-   cp -R skill/atlas-avatar ~/.openclaw/workspace/skills/
+   cp -R skills/atlas-avatar ~/.openclaw/workspace/skills/atlas-avatar
    ```
 
 2. Set your API key:
@@ -35,7 +35,7 @@ This repo contains:
 ```bash
 npm i -g clawhub
 clawhub auth
-clawhub skill publish ./skill/atlas-avatar \
+clawhub skill publish ./skills/atlas-avatar \
   --slug atlas-avatar \
   --name "Atlas Avatar" \
   --version 1.0.0 \
@@ -79,8 +79,8 @@ Atlas **realtime** sessions use **LiveKit**: your client (or demo app) connects 
 
 | Path | Purpose |
 |------|---------|
-| `skill/atlas-avatar/SKILL.md` | OpenClaw skill — instructions + curl examples |
-| `skill/atlas-avatar/references/api-reference.md` | Detailed endpoint reference |
+| `skills/atlas-avatar/SKILL.md` | OpenClaw skill — instructions + curl examples |
+| `skills/atlas-avatar/references/api-reference.md` | Detailed endpoint reference |
 | `.env.example` | Environment variables for scripts / docs |
 | `scripts/verify-env.sh` | Optional: checks `ATLAS_API_KEY` and hits `GET /v1/health` |
 
