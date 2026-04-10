@@ -4,8 +4,11 @@ Official integration pack for using **North Model Labs Atlas** (realtime + offli
 
 This repo contains:
 
-- **`skills/atlas-avatar/`** — OpenClaw skill (`SKILL.md` + reference docs) you can install locally or publish to [ClawHub](https://docs.openclaw.ai/tools/clawhub).
-- **Integration guides** — how to wire Atlas as the avatar layer while OpenClaw (or any OpenAI-compatible provider) handles reasoning.
+- **`core/`** — shared **`atlas_api.py`** + **`atlas_cli.py`** (full REST CLI).
+- **`skills/atlas-avatar/`** — OpenClaw skill: `SKILL.md`, **`scripts/atlas_session.py`** (Pika-style `start` / `leave` / `face-swap`), `requirements.txt`, references. Install locally or publish to [ClawHub](https://docs.openclaw.ai/tools/clawhub).
+- **`INTEGRATION.md`** — wiring Atlas with OpenClaw or a custom LLM.
+
+**Python:** `pip install -r core/requirements.txt` (or `skills/atlas-avatar/requirements.txt`). Scripts call **Atlas HTTP only** — they do not join Google Meet; connect **LiveKit** in your app after `start`.
 
 ## Quick start (OpenClaw users)
 
@@ -30,6 +33,14 @@ This repo contains:
 
 4. Start a new OpenClaw session (`/new`) and ask for a realtime avatar session or offline video generation. The agent will follow `SKILL.md`.
 
+**Agent-style CLI (from repo root):**
+
+```bash
+pip install -r core/requirements.txt
+python3 skills/atlas-avatar/scripts/atlas_session.py start --mode conversation --face-url "https://example.com/face.jpg"
+python3 skills/atlas-avatar/scripts/atlas_session.py leave --session-id SESSION_ID
+```
+
 ## Publish to ClawHub
 
 ```bash
@@ -38,7 +49,7 @@ clawhub auth
 clawhub skill publish ./skills/atlas-avatar \
   --slug atlas-avatar \
   --name "Atlas Avatar" \
-  --version 1.0.0 \
+  --version 1.0.3 \
   --tags latest
 ```
 
@@ -79,10 +90,16 @@ Atlas **realtime** sessions use **LiveKit**: your client (or demo app) connects 
 
 | Path | Purpose |
 |------|---------|
-| `skills/atlas-avatar/SKILL.md` | OpenClaw skill — instructions + curl examples |
-| `skills/atlas-avatar/references/api-reference.md` | Detailed endpoint reference |
-| `.env.example` | Environment variables for scripts / docs |
-| `scripts/verify-env.sh` | Optional: checks `ATLAS_API_KEY` and hits `GET /v1/health` |
+| `core/atlas_api.py` | Shared Atlas HTTP client |
+| `core/atlas_cli.py` | REST CLI (`realtime create`, `jobs wait`, …) |
+| `core/requirements.txt` | `requests` |
+| `skills/atlas-avatar/SKILL.md` | Skill — Python + `curl` |
+| `skills/atlas-avatar/scripts/atlas_session.py` | Pika-style verbs for agents |
+| `skills/atlas-avatar/requirements.txt` | Same deps as `core/` |
+| `skills/atlas-avatar/references/api-reference.md` | Endpoint reference |
+| `INTEGRATION.md` | Developer integration |
+| `.env.example` | Env var names |
+| `scripts/verify-env.sh` | Optional health + `/v1/me` |
 
 ## Get an API key
 
@@ -91,7 +108,7 @@ Create keys from the Atlas dashboard (see your product URL, e.g. `dashboard.atla
 ## Security
 
 - Never commit real API keys. Use `.env` locally and CI secrets in automation.
-- The skill uses `curl` with `Authorization: Bearer`. Ensure untrusted input is not passed into shell commands without sanitization (OpenClaw agents should substitute values safely; for production plugins prefer a typed OpenClaw plugin instead of raw shell).
+- Prefer `atlas_session.py` / `atlas_cli.py` over hand-built shell strings. If using `curl`, sanitize user-provided paths. For production, consider a typed OpenClaw plugin instead of raw shell.
 
 ## License
 

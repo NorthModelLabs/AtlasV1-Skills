@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Atlas API v8 — unified CLI for agents and humans.
+"""Atlas API v8 — unified CLI (uses atlas_api.py).
 
 Uses ATLAS_API_KEY and optional ATLAS_API_BASE (default https://api.atlasv1.com).
 
@@ -8,246 +8,82 @@ Exit codes: 0 ok, 2 validation/config, 3 HTTP error from API.
 from __future__ import annotations
 
 import argparse
-import json
-import mimetypes
-import os
 import sys
-import time
 from pathlib import Path
-from typing import Any
 
-import requests
+_CORE = Path(__file__).resolve().parent
+if str(_CORE) not in sys.path:
+    sys.path.insert(0, str(_CORE))
 
-
-def eprint(*a: object) -> None:
-    print(*a, file=sys.stderr)
-
-
-def base_url() -> str:
-    return os.environ.get("ATLAS_API_BASE", "https://api.atlasv1.com").rstrip("/")
-
-
-def auth_headers(*, required: bool) -> dict[str, str]:
-    if not required:
-        return {}
-    key = os.environ.get("ATLAS_API_KEY", "").strip()
-    if not key:
-        eprint("Error: set ATLAS_API_KEY in the environment.")
-        sys.exit(2)
-    return {"Authorization": f"Bearer {key}"}
-
-
-def emit_response(r: requests.Response) -> int:
-    if not r.ok:
-        eprint(f"HTTP {r.status_code}")
-    try:
-        data = r.json()
-        print(json.dumps(data, indent=2))
-    except Exception:
-        print(r.text or "(empty body)")
-    return 0 if r.ok else 3
+import atlas_api as api
 
 
 def cmd_index(_: argparse.Namespace) -> int:
-    r = requests.get(f"{base_url()}/", timeout=30)
-    return emit_response(r)
+    return api.emit_response(api.api_index())
 
 
 def cmd_health(_: argparse.Namespace) -> int:
-    r = requests.get(f"{base_url()}/v1/health", timeout=30)
-    return emit_response(r)
+    return api.emit_response(api.api_health())
 
 
 def cmd_status(_: argparse.Namespace) -> int:
-    r = requests.get(
-        f"{base_url()}/v1/status",
-        headers={**auth_headers(required=True)},
-        timeout=30,
-    )
-    return emit_response(r)
+    return api.emit_response(api.api_status())
 
 
 def cmd_me(_: argparse.Namespace) -> int:
-    r = requests.get(
-        f"{base_url()}/v1/me",
-        headers={**auth_headers(required=True)},
-        timeout=30,
-    )
-    return emit_response(r)
+    return api.emit_response(api.api_me())
 
 
 def cmd_realtime_create(args: argparse.Namespace) -> int:
-    b = base_url()
-    h = auth_headers(required=True)
     mode = args.mode or "conversation"
-    if args.face:
-        p = Path(args.face)
-        if not p.is_file():
-            eprint(f"Error: face file not found: {p}")
-            return 2
-        mime = mimetypes.guess_type(str(p))[0] or "application/octet-stream"
-        with p.open("rb") as fh:
-            r = requests.post(
-                f"{b}/v1/realtime/session",
-                headers=h,
-                data={"mode": mode},
-                files={"face": (p.name, fh, mime)},
-                timeout=120,
-            )
-        return emit_response(r)
-    body: dict[str, Any] = {"mode": mode}
-    if args.face_url:
-        body["face_url"] = args.face_url
-    r = requests.post(
-        f"{b}/v1/realtime/session",
-        headers={**h, "Content-Type": "application/json"},
-        json=body,
-        timeout=120,
-    )
-    return emit_response(r)
+    face = args.face or None
+    face_url = args.face_url or None
+    return api.emit_response(api.api_realtime_create(mode, face, face_url))
 
 
 def cmd_realtime_get(args: argparse.Namespace) -> int:
-    r = requests.get(
-        f"{base_url()}/v1/realtime/session/{args.session_id}",
-        headers={**auth_headers(required=True)},
-        timeout=30,
-    )
-    return emit_response(r)
+    return api.emit_response(api.api_realtime_get(args.session_id))
 
 
 def cmd_realtime_patch(args: argparse.Namespace) -> int:
-    p = Path(args.face)
-    if not p.is_file():
-        eprint(f"Error: face file not found: {p}")
-        return 2
-    mime = mimetypes.guess_type(str(p))[0] or "application/octet-stream"
-    with p.open("rb") as fh:
-        r = requests.patch(
-            f"{base_url()}/v1/realtime/session/{args.session_id}",
-            headers={**auth_headers(required=True)},
-            files={"face": (p.name, fh, mime)},
-            timeout=120,
-        )
-    return emit_response(r)
+    return api.emit_response(api.api_realtime_patch(args.session_id, args.face))
 
 
 def cmd_realtime_delete(args: argparse.Namespace) -> int:
-    r = requests.delete(
-        f"{base_url()}/v1/realtime/session/{args.session_id}",
-        headers={**auth_headers(required=True)},
-        timeout=60,
-    )
-    return emit_response(r)
+    return api.emit_response(api.api_realtime_delete(args.session_id))
 
 
 def cmd_generate(args: argparse.Namespace) -> int:
-    audio = Path(args.audio)
-    image = Path(args.image)
-    if not audio.is_file() or not image.is_file():
-        eprint("Error: --audio and --image must be existing files.")
-        return 2
-    am = mimetypes.guess_type(str(audio))[0] or "application/octet-stream"
-    im = mimetypes.guess_type(str(image))[0] or "application/octet-stream"
-    h = {**auth_headers(required=True)}
-    if args.callback_url:
-        h["X-Callback-URL"] = args.callback_url
-    with audio.open("rb") as af, image.open("rb") as imf:
-        r = requests.post(
-            f"{base_url()}/v1/generate",
-            headers=h,
-            files={
-                "audio": (audio.name, af, am),
-                "image": (image.name, imf, im),
-            },
-            timeout=120,
-        )
-    return emit_response(r)
+    cb = args.callback_url or None
+    return api.emit_response(api.api_generate(args.audio, args.image, cb))
 
 
 def cmd_jobs_list(args: argparse.Namespace) -> int:
-    params: dict[str, int] = {}
-    if args.limit is not None:
-        params["limit"] = args.limit
-    if args.offset is not None:
-        params["offset"] = args.offset
-    r = requests.get(
-        f"{base_url()}/v1/jobs",
-        headers={**auth_headers(required=True)},
-        params=params or None,
-        timeout=30,
-    )
-    return emit_response(r)
+    return api.emit_response(api.api_jobs_list(args.limit, args.offset))
 
 
 def cmd_jobs_get(args: argparse.Namespace) -> int:
-    r = requests.get(
-        f"{base_url()}/v1/jobs/{args.job_id}",
-        headers={**auth_headers(required=True)},
-        timeout=30,
-    )
-    return emit_response(r)
+    return api.emit_response(api.api_jobs_get(args.job_id))
 
 
 def cmd_jobs_result(args: argparse.Namespace) -> int:
-    r = requests.get(
-        f"{base_url()}/v1/jobs/{args.job_id}/result",
-        headers={**auth_headers(required=True)},
-        timeout=30,
-    )
-    return emit_response(r)
+    return api.emit_response(api.api_jobs_result(args.job_id))
 
 
 def cmd_jobs_wait(args: argparse.Namespace) -> int:
-    deadline = time.time() + args.timeout
-    h = auth_headers(required=True)
-    b = base_url()
-    while time.time() < deadline:
-        r = requests.get(f"{b}/v1/jobs/{args.job_id}", headers=h, timeout=30)
-        try:
-            data = r.json()
-        except Exception:
-            eprint(r.text)
-            return 3
-        status = data.get("status")
-        print(json.dumps(data, indent=2))
-        if status in ("completed", "failed"):
-            return 0 if status == "completed" else 3
-        time.sleep(args.interval)
-    eprint("Error: timeout waiting for job terminal state.")
-    return 3
+    return api.api_jobs_wait(args.job_id, args.interval, args.timeout)
 
 
 def cmd_avatar_session(args: argparse.Namespace) -> int:
-    """POST /v1/avatar/session — BYO LiveKit (plugin flow)."""
-    h = auth_headers(required=True)
-    data = {
-        "livekit_url": args.livekit_url,
-        "livekit_token": args.livekit_token,
-        "room_name": args.room_name,
-    }
-    if args.avatar_image:
-        p = Path(args.avatar_image)
-        if not p.is_file():
-            eprint(f"Error: avatar_image not found: {p}")
-            return 2
-        mime = mimetypes.guess_type(str(p))[0] or "application/octet-stream"
-        with p.open("rb") as fh:
-            r = requests.post(
-                f"{base_url()}/v1/avatar/session",
-                headers=h,
-                data=data,
-                files={"avatar_image": (p.name, fh, mime)},
-                timeout=120,
-            )
-        return emit_response(r)
-    r = requests.post(
-        f"{base_url()}/v1/avatar/session",
-        headers=h,
-        data=data,
-        timeout=120,
+    img = args.avatar_image or None
+    return api.emit_response(
+        api.api_avatar_session(
+            args.livekit_url,
+            args.livekit_token,
+            args.room_name,
+            img,
+        )
     )
-    return emit_response(r)
 
 
 def build_parser() -> argparse.ArgumentParser:

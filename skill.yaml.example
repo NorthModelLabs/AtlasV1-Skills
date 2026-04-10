@@ -4,7 +4,7 @@
 # Reference: https://docs.openclaw.ai/tools/clawhub
 
 name: atlas-avatar
-version: 1.0.2
+version: 1.0.3
 author: northmodellabs
 description: >
   Atlas GPU avatars — realtime LiveKit sessions and offline lip-sync video

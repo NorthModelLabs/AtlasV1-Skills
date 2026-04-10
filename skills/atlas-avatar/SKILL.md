@@ -1,7 +1,7 @@
 ---
 name: atlas_avatar
 description: "Create realtime AI avatar sessions (LiveKit WebRTC) and offline lip-sync avatar videos using the Atlas API by North Model Labs. Use when the user asks for Atlas avatar, talking head, realtime avatar, face animation, video from audio+image, lip sync, BYOB TTS + /v1/generate, or GPU avatar rendering."
-version: "1.0.2"
+version: "1.0.3"
 tags: ["avatar", "video", "realtime", "livekit", "lip-sync", "atlas", "gpu", "openclaw"]
 author: "northmodellabs"
 metadata:
@@ -23,11 +23,33 @@ Atlas provides **realtime** sessions (LiveKit) and **async** offline jobs (`POST
 | `ATLAS_API_BASE` | No | `https://api.atlasv1.com` |
 | `ATLAS_AGENT_REPO` | No | Only if you copied **only** `skills/atlas-avatar/` elsewhere — set to the **monorepo root** that contains `core/atlas_cli.py` |
 
-**Python deps:** from the monorepo root, `pip install -r core/requirements.txt` (or use a venv). Requires `requests`.
+**Python deps:** `pip install -r core/requirements.txt` or `pip install -r skills/atlas-avatar/requirements.txt` (same pins). Prefer a **venv**.
 
 ---
 
-## Preferred: unified CLI (`core/atlas_cli.py`)
+## Preferred for agents: `scripts/atlas_session.py` (Pika-style verbs)
+
+One entrypoint with **`start` / `leave` / `face-swap`** style commands. This only calls the **Atlas HTTP API** — it does **not** join Google Meet or other apps. After **`start`**, use `livekit_url`, `token`, and `room` in a LiveKit client ([sample apps](https://github.com/NorthModelLabs/atlas-realtime-example), [`@northmodellabs/atlas-react`](https://www.npmjs.com/package/@northmodellabs/atlas-react)).
+
+From the **monorepo root**:
+
+```bash
+python3 skills/atlas-avatar/scripts/atlas_session.py health
+python3 skills/atlas-avatar/scripts/atlas_session.py start --mode conversation --face-url "https://example.com/face.jpg"
+python3 skills/atlas-avatar/scripts/atlas_session.py start --mode passthrough --face /path/to/face.jpg
+python3 skills/atlas-avatar/scripts/atlas_session.py status --session-id SESSION_ID
+python3 skills/atlas-avatar/scripts/atlas_session.py face-swap --session-id SESSION_ID --face /path/to/new.jpg
+python3 skills/atlas-avatar/scripts/atlas_session.py leave --session-id SESSION_ID
+python3 skills/atlas-avatar/scripts/atlas_session.py offline --audio speech.mp3 --image face.jpg
+python3 skills/atlas-avatar/scripts/atlas_session.py jobs-wait JOB_ID
+python3 skills/atlas-avatar/scripts/atlas_session.py jobs-result JOB_ID
+```
+
+If the skill lives without `core/` nearby, set **`ATLAS_AGENT_REPO=/absolute/path/to/monorepo`**.
+
+---
+
+## Also: unified REST CLI (`core/atlas_cli.py`)
 
 From the **repository root** (full clone with `core/` + `skills/`):
 
@@ -91,7 +113,7 @@ curl -sS -X POST "${ATLAS_API_BASE:-https://api.atlasv1.com}/v1/generate" \
   -F "image=@face.jpg"
 ```
 
-**202** → `job_id`, `status: pending`. **Max ~50 MB** combined. **Billing:** **$4/hour** of output video duration (same rate as realtime), prorated.
+**202** → `job_id`, `status: pending`. **Max ~50 MB** combined. **Billing:** **$5/hour** of output video duration (passthrough rate), prorated.
 
 **Webhook:** header `X-Callback-URL: https://...` on the same POST.
 
