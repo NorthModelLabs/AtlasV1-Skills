@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Atlas API v8 — unified CLI (uses atlas_api.py).
+"""Atlas API — unified CLI (uses atlas_api.py). Server version: GET / → version.
 
 Uses ATLAS_API_KEY and optional ATLAS_API_BASE (default https://api.atlasv1.com).
 

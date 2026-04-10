@@ -22,7 +22,7 @@
 
 Multipart: **`audio`**, **`image`** (required). Returns **202** with `job_id`, `pending`.
 
-- **Billing:** **$4/hour** of **output** video duration (same cents/sec as realtime sessions), prorated.
+- **Billing:** see live `pricing` strings and [dashboard](https://dashboard.northmodellabs.com/dashboard/keys); do not hardcode rates in agents.
 - Combined upload limit ~**50 MB** (see live docs).
 - **BYOB TTS:** generate speech with any provider; pass the audio file here.
 
@@ -51,7 +51,7 @@ Presigned download JSON: `url`, `content_type`, `expires_in`.
 **JSON:** `{ "mode": "conversation"|"passthrough", "face_url": "https://..." }`  
 **Multipart:** `mode`, optional `face` file.
 
-**200:** `session_id`, `livekit_url`, `token`, `room`, `mode`, `max_duration_seconds`, **`pricing`** (`"$4/hour, prorated per second"` for both modes).
+**200:** `session_id`, `livekit_url`, `token`, `room`, `mode`, `max_duration_seconds`, **`pricing`** (API-defined string; varies by `mode`).
 
 ### `GET /v1/realtime/session/{id}`
 

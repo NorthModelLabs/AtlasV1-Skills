@@ -11,7 +11,9 @@ metadata:
       bins: [python3]
 ---
 
-# Atlas Avatar (OpenClaw skill) — API v8
+# Atlas Avatar (OpenClaw skill)
+
+Server version: check `GET /` → `version` (docs may lag production).
 
 Atlas provides **realtime** sessions (LiveKit) and **async** offline jobs (`POST /v1/generate` → poll → result). API keys: [North Model Labs dashboard](https://dashboard.northmodellabs.com/dashboard/keys).
 
@@ -113,7 +115,7 @@ curl -sS -X POST "${ATLAS_API_BASE:-https://api.atlasv1.com}/v1/generate" \
   -F "image=@face.jpg"
 ```
 
-**202** → `job_id`, `status: pending`. **Max ~50 MB** combined. **Billing:** **$5/hour** of output video duration (passthrough rate), prorated.
+**202** → `job_id`, `status: pending`. **Max ~50 MB** combined. **Billing:** see Atlas dashboard / `pricing` fields on responses.
 
 **Webhook:** header `X-Callback-URL: https://...` on the same POST.
 
@@ -153,7 +155,7 @@ curl -sS -X POST "${ATLAS_API_BASE:-https://api.atlasv1.com}/v1/realtime/session
   -F "face=@/path/to/face.jpg"
 ```
 
-**200:** `session_id`, `livekit_url`, `token`, `room`, `pricing` (`$4/hour, prorated per second` for both modes).
+**200:** `session_id`, `livekit_url`, `token`, `room`, `pricing` (exact string from API — tiers vary by `mode`; see dashboard).
 
 ### Session lifecycle
 

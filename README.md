@@ -48,7 +48,7 @@ python3 skills/atlas-avatar/scripts/atlas_session.py leave --session-id SESSION_
 
 ```bash
 npm i -g clawhub
-clawhub auth
+clawhub login
 clawhub skill publish ./skills/atlas-avatar \
   --slug atlas-avatar \
   --name "Atlas Avatar" \
@@ -87,7 +87,7 @@ clawhub install atlas-avatar
 
 Atlas **realtime** sessions use **LiveKit**: your client (or demo app) connects with the returned `livekit_url`, `token`, and `room`. The Atlas agent worker handles STT → LLM → TTS → avatar on the hosted side in `conversation` mode, or you stream audio in `passthrough` mode.
 
-**Billing (API):** **$4/hour** prorated to the second for realtime (**conversation** and **passthrough**) and for **offline** `/v1/generate` output duration (same cents-per-second rate).
+**Billing:** use the **`pricing`** field on realtime responses and your [dashboard](https://dashboard.northmodellabs.com/dashboard/keys); rates vary by `mode` and product — do not hardcode in automation.
 
 ## Repo layout
 
@@ -105,6 +105,7 @@ Atlas **realtime** sessions use **LiveKit**: your client (or demo app) connects 
 | `INTEGRATION.md` | Developer integration |
 | `.env.example` | Env var names |
 | `scripts/verify-env.sh` | Optional health + `/v1/me` |
+| `scripts/smoke-atlas.sh` | Health + index; optional realtime create/delete if `ATLAS_API_KEY` set |
 
 ## Get an API key
 

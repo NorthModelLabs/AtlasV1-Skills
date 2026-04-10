@@ -46,7 +46,8 @@ Unchanged: create session → LiveKit client → `DELETE` when done; offline `PO
 Publish the **skill folder** only:
 
 ```bash
-clawhub skill publish ./skills/atlas-avatar --slug atlas-avatar --name "Atlas Avatar" --version 1.0.2 --tags latest
+clawhub login
+clawhub skill publish ./skills/atlas-avatar --slug atlas-avatar --name "Atlas Avatar" --version 1.0.3 --tags latest
 ```
 
 ## 7. Plugins

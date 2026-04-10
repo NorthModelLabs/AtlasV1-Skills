@@ -1,4 +1,4 @@
-"""Shared Atlas API v8 HTTP helpers for atlas_cli.py and skill scripts."""
+"""Shared Atlas API HTTP helpers for atlas_cli.py and skill scripts."""
 from __future__ import annotations
 
 import json
