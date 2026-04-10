@@ -73,15 +73,15 @@ Presigned download JSON: `url`, `content_type`, `expires_in`.
 
 ---
 
-## Plugin (omitted from `GET /` index)
+## Plugin (often omitted from `GET /` index)
 
 ### `POST /v1/avatar/session`
 
+Production `GET /` currently lists generate, jobs, realtime, TTS, health, me, status — **not** this path. Treat it as **deployment- or product-specific** (e.g. **livekit-plugins-atlas** when the customer hosts the LiveKit room); confirm it exists on your base URL before relying on `atlas_cli.py avatar-session`.
+
 Multipart: `livekit_url`, `livekit_token`, `room_name` (strings); optional `avatar_image` file.
 
-**200:** `{ "session_id", "status": "ok" }`.
-
-For **livekit-plugins-atlas** when the customer hosts the LiveKit room.
+**200:** `{ "session_id", "status": "ok" }` (shape per your deployment).
 
 ---
 

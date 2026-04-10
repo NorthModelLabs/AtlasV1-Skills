@@ -147,7 +147,10 @@ def build_parser() -> argparse.ArgumentParser:
     jw.add_argument("--timeout", type=int, default=600)
     jw.set_defaults(fn=cmd_jobs_wait)
 
-    av = sub.add_parser("avatar-session", help="POST /v1/avatar/session (BYO LiveKit)")
+    av = sub.add_parser(
+        "avatar-session",
+        help="POST /v1/avatar/session (BYO LiveKit; may not exist on every deployment — check GET /)",
+    )
     av.add_argument("--livekit-url", required=True)
     av.add_argument("--livekit-token", required=True)
     av.add_argument("--room-name", required=True)
