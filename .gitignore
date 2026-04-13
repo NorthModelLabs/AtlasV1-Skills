@@ -5,6 +5,7 @@ node_modules/
 .clawhub/
 .venv/
 .venv-mb-test/
+.venv-cc-readme/
 venv/
 __pycache__/
 *.pyc

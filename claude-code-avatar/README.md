@@ -6,9 +6,10 @@ Use this folder to run **Claude Code** (or any terminal agent) against the **Atl
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed and signed in.
 - This **full repo** cloned (`core/` + `skills/` + optional `meeting-bot/`, `google-meet/`).
-- Python 3.10+ and:
+- Python 3.10+ and `requests` (Atlas CLI). On **macOS Homebrew Python**, use a venv (PEP 668 blocks global `pip install`):
 
   ```bash
+  python3 -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
   pip install -r core/requirements.txt
   ```
 
@@ -38,12 +39,20 @@ In the first message, **attach context** so the agent knows Atlas rules:
 
 ## 4. Practical test (terminal)
 
+With your venv **activated** (see §1):
+
 ```bash
 ./claude-code-avatar/scripts/demo.sh
 ```
 
 - **Without** `ATLAS_API_KEY`: runs **health** + **index** only (no cost).
 - **With** `ATLAS_API_KEY`: starts a short **passthrough** session, writes `claude-code-avatar/.demo-session.json`, **deletes** the session, removes the file.
+
+**CI / sanity:** run everything the README promises except opening `claude`:
+
+```bash
+./claude-code-avatar/scripts/verify-readme.sh
+```
 
 ## 5. Natural language via the agent
 
