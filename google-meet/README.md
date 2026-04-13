@@ -35,11 +35,28 @@ python3 google-meet/meet_workflow.py up \
 
 `--copy` (macOS only) runs `pbcopy` so you can paste the block straight into Meet chat.
 
-# Pieces only
+**Pieces only:**
+
+```bash
 python3 google-meet/meet_workflow.py checklist --meet-url "https://meet.google.com/..."
 python3 google-meet/meet_workflow.py open-meet --meet-url "https://meet.google.com/..."
 python3 google-meet/meet_workflow.py paste --meet-url "..." --session-file session.json --viewer-url "https://..."
 ```
+
+## How to test “join Meet” today (human path)
+
+There is **no** automated Meet join in this repo. You test by **you** joining the call like any participant, then attaching the avatar **outside** Meet (side tab or screen share).
+
+1. **Create or open a Meet** and copy the `https://meet.google.com/...` link.
+2. From the monorepo root, run `meet_workflow.py up` with `--open-meet` so the Meet tab opens (you click **Ask to join** / **Join now** as yourself).
+3. After the command prints the chat block, use **`--copy`** on macOS, then in Meet click **Chat** and **paste** — that tells others how to open your **viewer** link (you still need a real HTTPS viewer that uses the LiveKit token from `session.json` server-side).
+4. **You** “bring the avatar” by either:
+   - opening your viewer in **Chrome** and **presenting that tab** in Meet, or  
+   - having guests open the **viewer URL** from chat (same as a normal link).
+
+5. When finished: `python3 skills/atlas-avatar/scripts/atlas_session.py leave --session-id …` (or `core/atlas_cli.py realtime delete …`) so the realtime session stops billing.
+
+**If you need a bot tile inside Meet** (no human presenter): that is a **different product** (e.g. hosted meeting skills such as [Pika-Skills](https://github.com/Pika-Labs/Pika-Skills), or your own bot service) plus usually Atlas **passthrough** — not something `meet_workflow.py` can turn on by itself.
 
 ## OpenClaw
 
