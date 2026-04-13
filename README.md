@@ -167,6 +167,7 @@ Install: `clawhub install atlas-avatar` (flags may vary — `clawhub --help`).
 |------|---------|
 | `google-meet/` | **Meet workflow CLI** — chains `atlas_session start` + `meet_assist` (not a Meet bot); see `google-meet/README.md` |
 | `meeting-bot/` | **OSS local helpers** — `local_conversation_demo.py` (mic viewer + optional Meet tab + screen-share), Playwright Meet, LiveKit tone; see `meeting-bot/README.md` |
+| `claude-code-avatar/` | **Claude Code** — `CLAUDE.md`, `PROMPTS.md`, `scripts/demo.sh`; see `claude-code-avatar/README.md` |
 | `core/atlas_api.py` | Shared Atlas HTTP client |
 | `core/atlas_cli.py` | REST CLI |
 | `core/requirements.txt` | `requests` |

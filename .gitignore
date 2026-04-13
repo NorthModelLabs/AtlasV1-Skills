@@ -10,3 +10,4 @@ __pycache__/
 *.pyc
 meeting-bot/.browser-profile/
 meeting-bot/session.json
+claude-code-avatar/.demo-session.json
