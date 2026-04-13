@@ -14,6 +14,8 @@ It does **not** implement a **synthetic Meet participant** (no bot that joins `m
 
 ## Commands
 
+**Important:** the CLI prints a **draft message in your terminal**. Nothing is sent into Google Meet automatically — you must **open Meet → Chat → paste** (⌘V / Ctrl+V). Meet’s own “join” / invite UI is only for **Meet participants**; Atlas does not register a Meet user.
+
 From **monorepo root** (recommended):
 
 ```bash
@@ -27,7 +29,11 @@ python3 google-meet/meet_workflow.py up \
   --mode conversation \
   --face-url "https://example.com/face.jpg" \
   --viewer-url "https://yourapp.com/avatar/..." \
-  --open-meet
+  --open-meet \
+  --copy
+```
+
+`--copy` (macOS only) runs `pbcopy` so you can paste the block straight into Meet chat.
 
 # Pieces only
 python3 google-meet/meet_workflow.py checklist --meet-url "https://meet.google.com/..."

@@ -17,6 +17,34 @@ import sys
 from pathlib import Path
 
 
+def _meet_chat_reminder() -> None:
+    print(
+        "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "  This text is ONLY in your terminal — Google Meet never sees it\n"
+        "  until YOU paste it: click Meet chat → paste (⌘V / Ctrl+V).\n"
+        "  Meet “join / accept” invites are for people in Meet, not Atlas.\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+        file=sys.stderr,
+    )
+
+
+def _maybe_copy_pasteboard(text: str) -> None:
+    if sys.platform != "darwin":
+        print(
+            "Tip: use --copy on macOS to put the block on the clipboard; "
+            "else copy the text above manually.",
+            file=sys.stderr,
+        )
+        return
+    try:
+        subprocess.run(["pbcopy"], input=text, text=True, check=True, timeout=5)
+    except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+        print(f"Could not copy to clipboard: {e}", file=sys.stderr)
+        return
+    print("Copied to clipboard — open Meet chat and press ⌘V.", file=sys.stderr)
+
+
 def _die(msg: str, code: int = 2) -> None:
     print(msg, file=sys.stderr)
     raise SystemExit(code)
@@ -65,12 +93,30 @@ def run_open_meet(root: Path, meet_url: str) -> int:
     return subprocess.call([_py(), str(assist), "open-meet", "--meet-url", meet_url])
 
 
-def run_paste(root: Path, meet_url: str, session_file: Path, viewer_url: str) -> int:
+def run_paste(
+    root: Path,
+    meet_url: str,
+    session_file: Path,
+    viewer_url: str,
+    *,
+    copy: bool = False,
+) -> int:
     _, assist = paths(root)
     cmd = [_py(), str(assist), "paste-message", "--meet-url", meet_url, "-f", str(session_file)]
     if viewer_url.strip():
         cmd += ["--viewer-url", viewer_url.strip()]
-    return subprocess.call(cmd)
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    if r.returncode != 0:
+        if r.stderr:
+            print(r.stderr, end="", file=sys.stderr)
+        return r.returncode
+    block = (r.stdout or "").rstrip() + "\n"
+    if block.strip():
+        sys.stdout.write(block)
+    _meet_chat_reminder()
+    if copy and block.strip():
+        _maybe_copy_pasteboard(block)
+    return 0
 
 
 def run_session_start(
@@ -114,7 +160,13 @@ def cmd_up(args: argparse.Namespace) -> int:
     rc = run_session_start(root, args.mode, args.face or "", args.face_url or "", Path(args.output))
     if rc != 0:
         return rc
-    return run_paste(root, args.meet_url, Path(args.output), args.viewer_url or "")
+    return run_paste(
+        root,
+        args.meet_url,
+        Path(args.output),
+        args.viewer_url or "",
+        copy=bool(getattr(args, "copy", False)),
+    )
 
 
 def main() -> int:
@@ -136,6 +188,11 @@ def main() -> int:
         action="store_true",
         help="Open Meet in default browser before starting Atlas session",
     )
+    u.add_argument(
+        "--copy",
+        action="store_true",
+        help="macOS: copy Meet chat block to clipboard (pbcopy) after printing",
+    )
     u.set_defaults(fn=cmd_up)
 
     c = sub.add_parser("checklist", help="JSON checklist (delegates to meet_assist)")
@@ -150,7 +207,16 @@ def main() -> int:
     pm.add_argument("--meet-url", required=True)
     pm.add_argument("--session-file", "-f", required=True)
     pm.add_argument("--viewer-url", default="")
-    pm.set_defaults(fn=lambda a: run_paste(repo_root(), a.meet_url, Path(a.session_file), a.viewer_url))
+    pm.add_argument("--copy", action="store_true", help="macOS: copy block to clipboard (pbcopy)")
+    pm.set_defaults(
+        fn=lambda a: run_paste(
+            repo_root(),
+            a.meet_url,
+            Path(a.session_file),
+            a.viewer_url,
+            copy=bool(a.copy),
+        )
+    )
 
     args = p.parse_args()
     return int(args.fn(args))
