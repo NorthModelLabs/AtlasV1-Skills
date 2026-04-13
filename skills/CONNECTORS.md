@@ -13,6 +13,6 @@ Copy any folder into your OpenClaw `skills/` directory alongside `atlas-avatar`:
 cp -R skills/atlas-bridge-slack ~/.openclaw/workspace/skills/
 ```
 
-**Flow:** create session with `atlas_session.py start … > session.json`, then `post_session.py` for Slack/Discord. From repo root, **`google-meet/meet_workflow.py`** can chain `start` + Meet chat paste in one step (see `google-meet/README.md`).
+**Flow:** create session with `atlas_session.py start … > session.json`, then `post_session.py` for Slack/Discord. From repo root, **`google-meet/meet_workflow.py`** can chain `start` + Meet chat paste in one step (see `google-meet/README.md`). For **local OSS** Meet browser + LiveKit test tone, see **`meeting-bot/README.md`**.
 
 Real **meeting-bot** behavior (synthetic participant inside Meet/Zoom) requires separate infrastructure or vendors — see each skill’s `SKILL.md`.

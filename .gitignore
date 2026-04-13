@@ -4,6 +4,9 @@
 node_modules/
 .clawhub/
 .venv/
+.venv-mb-test/
 venv/
 __pycache__/
 *.pyc
+meeting-bot/.browser-profile/
+meeting-bot/session.json
