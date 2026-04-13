@@ -4,14 +4,14 @@ Paste into Claude Code after opening the **monorepo root** and setting `ATLAS_AP
 
 ---
 
-## HeyGen-style pairing (copy this whole block into Claude Code)
+## Terminal agent pairing (copy this whole block into Claude Code)
 
 Open the repo root, run `claude`, then paste **once**:
 
 ```text
 @claude-code-avatar/CLAUDE.md @skills/atlas-avatar/SKILL.md
 
-You are my terminal agent like the HeyGen CLI demo: I describe a goal, you run the exact bash commands in this repo and paste stdout/stderr back.
+You are my terminal agent: I describe a goal, you run the exact bash commands in this repo and paste stdout/stderr back.
 
 Goal A — free smoke (no billing): run health + first 25 lines of index.
 Goal B — paid smoke (uses a few cents): run ./claude-code-avatar/scripts/demo.sh (needs ATLAS_API_KEY in the shell).
@@ -20,7 +20,7 @@ Goal C — “make a realtime session” (paid): run atlas_session start --mode 
 Start with Goal A, then ask which letter I want next.
 ```
 
-That’s the **pairing**: Claude Code has repo context + permission to run shell → **Atlas** is just the CLI underneath (same pattern as `heygen …`, different commands).
+That’s the **pairing**: Claude Code has repo context + permission to run shell → **Atlas** is the CLI underneath.
 
 ---
 
@@ -60,7 +60,7 @@ python3 skills/atlas-avatar/scripts/atlas_session.py leave --session-id SESSION_
 
 ---
 
-## HeyGen-style “one sentence” (agent composes steps)
+## One sentence → agent composes steps
 
 > I have `./assets/headshot.jpg` and `./assets/voice.mp3`. Create an offline Atlas avatar video job, wait for completion, and print the download URL.
 

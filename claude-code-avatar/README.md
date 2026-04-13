@@ -1,6 +1,6 @@
 # Claude Code × Atlas Avatar
 
-Use this folder to run **Claude Code** (or any terminal agent) against the **Atlas** CLIs in this monorepo — similar in spirit to vendor demos that run `heygen …` from the agent, but here the tools are **`atlas_session.py`** / **`atlas_cli.py`**.
+Use this folder to run **Claude Code** (or any terminal agent) against the **Atlas** CLIs in this monorepo — same idea as “natural language → agent runs a vendor CLI,” except the tools are **`atlas_session.py`** / **`atlas_cli.py`**.
 
 ## 1. Prereqs
 
@@ -34,7 +34,7 @@ In the first message, **attach context** so the agent knows Atlas rules:
 - `@claude-code-avatar/CLAUDE.md`
 - or `@skills/atlas-avatar/SKILL.md`
 
-**Fastest “HeyGen-style” pairing:** open **`PROMPTS.md`** and copy the block under **“HeyGen-style pairing (copy this whole block into Claude Code)”** — it tells Claude Code to run Goal A / B / C against this repo.
+**Fastest terminal-agent pairing:** open **`PROMPTS.md`** and copy the block under **“Terminal agent pairing (copy this whole block into Claude Code)”** — it tells Claude Code to run Goal A / B / C against this repo.
 
 ## 4. Practical test (terminal)
 
@@ -45,9 +45,15 @@ In the first message, **attach context** so the agent knows Atlas rules:
 - **Without** `ATLAS_API_KEY`: runs **health** + **index** only (no cost).
 - **With** `ATLAS_API_KEY`: starts a short **passthrough** session, writes `claude-code-avatar/.demo-session.json`, **deletes** the session, removes the file.
 
-## 5. “HeyGen-style” natural language
+## 5. Natural language via the agent
 
 See **`PROMPTS.md`** for copy-paste prompts. Claude Code should translate them into the Python commands above (or `curl` from `SKILL.md`).
+
+### Do you need a separate “Claude skill”?
+
+**No.** Claude Code uses **this repo + `@` files** (`CLAUDE.md`, `SKILL.md`) and **Bash**. There is no extra install step beyond `pip install -r core/requirements.txt` and `ATLAS_API_KEY`.
+
+**OpenClaw** is different: it loads folders under `skills/` as **OpenClaw skills**. For Claude Code, the parallel is **`claude-code-avatar/`** docs + prompts — not the same packaging as `skills/atlas-avatar/` for OpenClaw.
 
 ## 6. Limits (honest)
 
