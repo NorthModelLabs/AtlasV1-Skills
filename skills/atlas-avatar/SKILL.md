@@ -215,6 +215,12 @@ curl -sS -X DELETE "${ATLAS_API_BASE:-https://api.atlasv1.com}/v1/realtime/sessi
 
 JSON uses **`error`** + **`message`**. Full table: Atlas website → API docs → Error Responses.
 
+## Passthrough mode — persistent audio track
+
+When using **passthrough** mode with a browser client, use the **persistent audio track pattern**: publish a single `MediaStreamDestination` to the LiveKit room for the entire session. It outputs silence when idle (keeping the avatar animated) and TTS audio when speaking. **Do not** call `publishAudio()` directly — it tears down the track after each call, causing the avatar to freeze between messages.
+
+Full copy-paste code: [atlas-realtime-example README](https://github.com/NorthModelLabs/atlas-realtime-example) and [API docs](https://www.northmodellabs.com/api).
+
 ## OpenClaw as LLM
 
 Point your chat client at OpenClaw’s HTTP gateway (same shape many agent stacks use for chat completions); use this skill for Atlas. **Conversation** mode uses Atlas STT/LLM/TTS unless you use **passthrough** and your own audio.

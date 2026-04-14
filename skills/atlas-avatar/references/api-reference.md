@@ -53,6 +53,8 @@ Presigned download JSON: `url`, `content_type`, `expires_in`.
 
 **200:** `session_id`, `livekit_url`, `token`, `room`, `mode`, `max_duration_seconds`, **`pricing`** (API-defined string; varies by `mode`).
 
+**Passthrough audio:** In `passthrough` mode, use a **persistent audio track** — publish a single `MediaStreamDestination` track for the entire session (silence when idle, TTS audio when speaking). Do **not** call `publishAudio()` repeatedly — it tears down the track after each call, causing the avatar to freeze. See the [realtime example app](https://github.com/NorthModelLabs/atlas-realtime-example) README for the full pattern.
+
 ### `GET /v1/realtime/session/{id}`
 
 `status`, `room`, `started_at`, `ended_at`, `duration_seconds`, `max_duration_seconds`.
