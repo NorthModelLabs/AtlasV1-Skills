@@ -1,2 +1,0 @@
-# meet_workflow.py uses only the stdlib; Atlas session subprocess needs requests
-# (install from repo root: pip install -r core/requirements.txt)

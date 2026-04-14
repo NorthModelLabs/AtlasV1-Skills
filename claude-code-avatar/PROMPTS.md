@@ -1,12 +1,12 @@
-# Example prompts (Claude Code / terminal agents)
+# Example prompts (terminal coding agents)
 
-Paste into Claude Code after opening the **monorepo root** and setting `ATLAS_API_KEY`. The agent should run the shell commands shown in `skills/atlas-avatar/SKILL.md` or below.
+Paste into your terminal coding agent after opening the **monorepo root** and setting `ATLAS_API_KEY`. The agent should run the shell commands shown in `skills/atlas-avatar/SKILL.md` or below.
 
 ---
 
-## Terminal agent pairing (copy this whole block into Claude Code)
+## Terminal agent pairing (copy this whole block into the agent)
 
-Open the repo root, run `claude`, then paste **once**:
+Open the repo root, start your terminal coding agent, then paste **once**:
 
 ```text
 @claude-code-avatar/CLAUDE.md @skills/atlas-avatar/SKILL.md
@@ -15,12 +15,12 @@ You are my terminal agent: I describe a goal, you run the exact bash commands in
 
 Goal A — free smoke (no billing): run health + first 25 lines of index.
 Goal B — paid smoke (uses a few cents): run ./claude-code-avatar/scripts/demo.sh (needs ATLAS_API_KEY in the shell).
-Goal C — “make a realtime session” (paid): run atlas_session start --mode conversation --face-url "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=256&h=256&fit=crop", show JSON with token redacted, remind me to leave with session_id.
+Goal C — “make a realtime session” (paid): run atlas_session start --mode conversation --face-url "https://example.com/face.jpg", show JSON with token redacted, remind me to leave with session_id.
 
 Start with Goal A, then ask which letter I want next.
 ```
 
-That’s the **pairing**: Claude Code has repo context + permission to run shell → **Atlas** is the CLI underneath.
+That’s the **pairing**: the agent has repo context + permission to run shell → **Atlas** is the CLI underneath.
 
 ---
 
@@ -41,7 +41,7 @@ python3 skills/atlas-avatar/scripts/atlas_session.py index | head -30
 
 ```bash
 export ATLAS_API_KEY="…"
-python3 skills/atlas-avatar/scripts/atlas_session.py start --mode conversation --face-url "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=256&h=256&fit=crop"
+python3 skills/atlas-avatar/scripts/atlas_session.py start --mode conversation --face-url "https://example.com/face.jpg"
 ```
 
 Then leave:
@@ -58,6 +58,10 @@ python3 skills/atlas-avatar/scripts/atlas_session.py leave --session-id SESSION_
 
 (Paths must exist; agent runs `offline` then `jobs-wait` then `jobs-result` — see `SKILL.md`.)
 
+## Offline render → Discord (full pipeline)
+
+> With `ATLAS_API_KEY` and `DISCORD_WEBHOOK_URL` in `.env`, run `./scripts/bridges/atlas-offline-to-discord.sh "Short intro for the channel"` and confirm the **Atlas-generated MP4** appears as an attachment in Discord.
+
 ---
 
 ## One sentence → agent composes steps
@@ -68,10 +72,6 @@ Agent sequence: `offline --audio … --image …` → `jobs-wait` → `jobs-resu
 
 ---
 
-## Local viewer + Meet (screen share)
+## Local viewer (mic + avatar on your machine)
 
-> Run the local conversation demo opening Meet `https://meet.google.com/…` with this face URL, and tell me to screen-share the localhost tab.
-
-```bash
-python3 meeting-bot/local_conversation_demo.py --meet-url "https://meet.google.com/xxx" --face-url "https://…"
-```
+> Read `viewer/README.md` and outline how we would host a small page on `http://127.0.0.1` that connects to Atlas `livekit_url` + `token` + `room` after `atlas_session.py start`, so I can talk to the avatar without opening Google Meet.

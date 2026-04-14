@@ -1,4 +1,4 @@
-# Atlas Avatar — Claude Code notes
+# Atlas Avatar — terminal agent notes
 
 Use this file when the agent should drive **North Model Labs Atlas** from this monorepo.
 
@@ -27,7 +27,7 @@ Use this file when the agent should drive **North Model Labs Atlas** from this m
 
 - Never print or commit real keys. Redact `token` in logs.
 - After `start`, always `leave --session-id …` when done (billing).
-- Google Meet does **not** auto-join from Atlas; use `meeting-bot/local_conversation_demo.py` + screen share, or `google-meet/meet_workflow.py` for paste text — see `claude-code-avatar/README.md`.
+- Atlas does **not** join Meet/Zoom/Teams as a bot. After `start`, open your **viewer** with `livekit_url` + `token` + `room` (planned default: `viewer/README.md`) or post `viewer_url` to Discord/Slack.
 
 ## Docs in this repo
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Smoke test for Claude Code / CI: health + index; optional short realtime if ATLAS_API_KEY set.
+# Smoke test for terminal agents / CI: health + index; optional short realtime if ATLAS_API_KEY set.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 export ATLAS_API_BASE="${ATLAS_API_BASE:-https://api.atlasv1.com}"

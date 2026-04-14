@@ -1,6 +1,6 @@
 ---
 name: atlas_avatar
-description: "Create realtime AI avatar sessions (LiveKit WebRTC) and offline lip-sync avatar videos using the Atlas API by North Model Labs. Use when the user asks for Atlas avatar, talking head, realtime avatar, face animation, video from audio+image, lip sync, BYOB TTS + /v1/generate, or GPU avatar rendering."
+description: "Create realtime AI avatar sessions (LiveKit WebRTC) and offline lip-sync avatar videos using the Atlas API by North Model Labs. Post offline MP4 renders to Discord (webhook). Use when the user asks for Atlas avatar, talking head, realtime avatar, face animation, video from audio+image, lip sync, BYOB TTS + /v1/generate, Discord delivery of renders, or GPU avatar rendering."
 version: "1.0.3"
 tags: ["avatar", "video", "realtime", "livekit", "lip-sync", "atlas", "gpu", "openclaw"]
 author: "northmodellabs"
@@ -29,9 +29,9 @@ Atlas provides **realtime** sessions (LiveKit) and **async** offline jobs (`POST
 
 ---
 
-## Preferred for agents: `scripts/atlas_session.py` (verb CLI: start / leave / face-swap / …)
+## Preferred for agents: `skills/atlas-avatar/scripts/atlas_session.py` (verb CLI: start / leave / face-swap / …)
 
-One entrypoint with **`start` / `leave` / `face-swap`** style commands. This only calls the **Atlas HTTP API** — it does **not** join Google Meet or other apps. After **`start`**, use `livekit_url`, `token`, and `room` in a LiveKit client ([sample apps](https://github.com/NorthModelLabs/atlas-realtime-example), [`@northmodellabs/atlas-react`](https://www.npmjs.com/package/@northmodellabs/atlas-react)).
+One entrypoint with **`start` / `leave` / `face-swap`** style commands. This only calls the **Atlas HTTP API** — it does **not** join third-party meeting apps. After **`start`**, use `livekit_url`, `token`, and `room` in a **WebRTC viewer** that speaks the LiveKit client protocol ([sample apps](https://github.com/NorthModelLabs/atlas-realtime-example), [`@northmodellabs/atlas-react`](https://www.npmjs.com/package/@northmodellabs/atlas-react)).
 
 From the **monorepo root**:
 
@@ -48,6 +48,32 @@ python3 skills/atlas-avatar/scripts/atlas_session.py jobs-result JOB_ID
 ```
 
 If the skill lives without `core/` nearby, set **`ATLAS_AGENT_REPO=/absolute/path/to/monorepo`**.
+
+### One-shot: Atlas offline MP4 → Discord channel
+
+End-to-end script ( **`offline` → `jobs-wait` → download presigned URL → Discord attachment** ). Needs **`ATLAS_API_KEY`**, **`DISCORD_WEBHOOK_URL`**, `curl`, and the same Python deps as above.
+
+```bash
+./scripts/bridges/atlas-offline-to-discord.sh "Optional intro line(s) shown above the session bullets in Discord."
+```
+
+Uses default test fixtures under `claude-code-avatar/test-fixtures/` (from `make-test-assets.sh`). Override inputs with env **`ATLAS_OFFLINE_AUDIO`** / **`ATLAS_OFFLINE_IMAGE`**.
+
+For a **custom intro** (e.g. “Here’s the avatar explaining the change”), pass it as **all arguments** to the script, or build JSON for `skills/atlas-bridge-discord/scripts/post_session.py` and set **`bridge_note`** / **`discord_intro`** on the JSON (same script reads those fields).
+
+If the MP4 is **> ~25 MB**, the script posts a **link embed** only (Discord webhook file limit).
+
+### Narrated clip (LLM + ElevenLabs + face from S3) → Discord
+
+Full pipeline: **Claude** writes a short spoken script → **ElevenLabs** TTS to MP3 → **face image** downloaded from your **S3 bucket** (e.g. avatarhub) → **Atlas `/v1/generate`** → **Discord** attachment.
+
+```bash
+pip install -r scripts/requirements-narrator.txt   # once: boto3 + requests; ffmpeg for MP3→WAV
+./scripts/bridges/atlas-narrated-avatar-to-discord.sh "Why we shipped this feature"
+./scripts/bridges/atlas-narrated-avatar-to-discord.sh --face-key faces/alice.png "Same topic, fixed face"
+```
+
+Env vars: see **`.env.example`** block *Narrated avatar → Discord*. Requires `ANTHROPIC_API_KEY`, `LLM_MODEL`, `ELEVENLABS_API_KEY`, `AWS_*` + `AWS_ENDPOINT_URL_S3`, `AVATARHUB_S3_BUCKET`, plus Atlas + Discord keys. Optional **`HELICONE_API_KEY`** for Anthropic via Helicone.
 
 ---
 
@@ -191,8 +217,8 @@ JSON uses **`error`** + **`message`**. Full table: Atlas website → API docs �
 
 ## OpenClaw as LLM
 
-Point your chat client at OpenClaw’s OpenAI-compatible base URL; use this skill for Atlas. **Conversation** mode uses Atlas STT/LLM/TTS unless you use **passthrough** and your own audio.
+Point your chat client at OpenClaw’s HTTP gateway (same shape many agent stacks use for chat completions); use this skill for Atlas. **Conversation** mode uses Atlas STT/LLM/TTS unless you use **passthrough** and your own audio.
 
-## Related: Slack / Discord / Meet / Zoom
+## Related bridges
 
-This monorepo includes **bridge** skills under `skills/` — see **`CONNECTORS.md`**. Slack and Discord can **post** session info via webhooks; Discord can add a **`viewer_url`** embed and optionally attach a short **MP4**. **Google Meet:** `meet_assist.py` helps with checklist / browser open / chat paste — **not** a hosted Meet bot (see that skill’s `SKILL.md`). Zoom remains **guide-only**.
+This monorepo includes **Slack** and **Discord** webhook bridges under `skills/` — see **`CONNECTORS.md`**. Incoming webhooks can **post** session info; some bridges add a **`viewer_url`** embed and optionally attach a short **MP4**. A **local default viewer** (open a tab on your machine instead of a meeting product) is sketched in **`viewer/README.md`**.

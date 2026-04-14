@@ -1,6 +1,6 @@
 # Integrating Atlas Avatar with OpenClaw
 
-Part of the **[avatarclaw](https://github.com/NorthModelLabs/avatarclaw)** monorepo (`core/` + `skills/`). For developers wiring OpenClaw (or any OpenAI Chat Completions–compatible client) with Atlas GPU avatars.
+Part of the **[avatarclaw](https://github.com/NorthModelLabs/avatarclaw)** monorepo (`core/` + `skills/`). For developers wiring OpenClaw (or any chat-completions–shaped HTTP client) with Atlas GPU avatars.
 
 ## 1. Roles
 

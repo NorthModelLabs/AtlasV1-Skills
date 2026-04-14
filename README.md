@@ -1,8 +1,19 @@
 # Atlas Avatar skills (OpenClaw & agents)
 
-Open-source **skills** and **CLI tools** for AI coding agents ([OpenClaw](https://docs.openclaw.ai), Claude Code, etc.) that call the **[North Model Labs](https://www.northmodellabs.com/) Atlas API** — realtime **LiveKit** avatar sessions and **offline** lip-sync video jobs (GPU warping, TTS integrations).
+Open-source **skills** and **CLI tools** for AI coding agents ([OpenClaw](https://docs.openclaw.ai), terminal coding agents, etc.) that call the **[North Model Labs](https://www.northmodellabs.com/) Atlas API** — realtime **WebRTC (LiveKit-shaped join info from Atlas)** sessions and **offline** lip-sync video jobs (GPU warping, TTS integrations).
 
-This pack is **API-first**: you get `livekit_url`, `token`, and `room` from Atlas, then connect a **browser or app** you control. It is **not** a drop-in clone of hosted meeting-bot products (see [Google Meet](#google-meet-vs-hosted-meeting-bots) below).
+**Where to start**
+
+| You want… | Go to |
+|-----------|--------|
+| OpenClaw / skill install | **Getting started** below + `skills/atlas-avatar/SKILL.md` |
+| A terminal coding agent driving shell | `claude-code-avatar/README.md` + root `CLAUDE.md` |
+| Raw HTTP / curl | `skills/atlas-avatar/references/api-reference.md`, `core/atlas_cli.py --help` |
+| Slack / Discord webhooks + offline MP4 delivery | `skills/CONNECTORS.md`, `scripts/README.md`, `scripts/bridges/` |
+| Slack “marketplace” / public listing | **Not from this repo** — see [Distribution](#distribution-slack-app-directory-vs-this-repo) below |
+| Local browser viewer (planned) | `viewer/README.md` |
+
+This pack is **API-first**: you get `livekit_url`, `token`, and `room` from Atlas, then connect a **browser or app** you control. It is **not** a drop-in “synthetic participant joins Zoom/Meet/Teams” product (see [Scope](#scope-realtime-vs-meeting-products) below).
 
 ---
 
@@ -37,7 +48,7 @@ This pack is **API-first**: you get `livekit_url`, `token`, and `room` from Atla
 | Piece | Role |
 |--------|------|
 | **`SKILL.md`** | When to use the skill, safety notes, and step-by-step flows (OpenClaw reads this). |
-| **`scripts/`** | Small CLIs (`atlas_session.py`, webhooks, Meet *assist* helpers, …). |
+| **`scripts/`** | Small CLIs (`atlas_session.py`), webhook smoke tests, offline→Discord wrappers — see `scripts/README.md`. |
 | **`requirements.txt`** | Python deps (usually `requests`). |
 
 Copy a skill into your agent workspace (e.g. `~/.openclaw/workspace/skills/`) or publish/install via [ClawHub](https://docs.openclaw.ai/tools/clawhub).
@@ -49,22 +60,28 @@ Copy a skill into your agent workspace (e.g. `~/.openclaw/workspace/skills/`) or
 | Skill | Pricing (source of truth) | What it does |
 |-------|---------------------------|--------------|
 | **`skills/atlas-avatar/`** | Dashboard + API `pricing` / `GET /v1/me` | Core Atlas API: realtime sessions, offline jobs, jobs poll, face-swap — `SKILL.md` + **`atlas_session.py`** verb CLI + **`run_atlas_cli.py`**. |
-| **`skills/atlas-bridge-slack/`** | Webhook only (Slack side is free tier / your plan) | Post session summary to Slack Incoming Webhook. |
+| **`skills/atlas-bridge-slack/`** | Webhook + your Slack app (provider billing is yours) | **Incoming webhook** text/link + optional **bot token** MP4 upload (`post_session.py`, `scripts/bridges/atlas-offline-to-slack.sh`). |
 | **`skills/atlas-bridge-discord/`** | Webhook only | Post summary + optional **`viewer_url`** embed + optional **MP4** attach (size limits apply). |
-| **`skills/atlas-bridge-google-meet/`** | N/A (no Atlas minutes by itself) | **Guide** + **`meet_assist.py`**: checklist, open Meet in browser, draft **chat paste** — you still join Meet as a human and run a **viewer** for the avatar. |
-| **`skills/atlas-bridge-zoom/`** | N/A | **Guide** only — same architectural limits as Meet. |
 
 Overview table and copy commands: **`skills/CONNECTORS.md`**.
 
 ---
 
-## Google Meet vs hosted meeting bots
+## Distribution: Slack App Directory vs this repo
 
-Some **other** skill packs (for example [Pika-Labs/Pika-Skills](https://github.com/Pika-Labs/Pika-Skills)) ship a **hosted** “join Google Meet as an avatar” flow backed by **their** cloud API and billing (e.g. per-minute pricing on their README).
+**Slack App Directory / “Marketplace”** listings are for **public, installable apps** Slack reviews end-to-end: support URL, privacy policy, OAuth install flow to **your** servers, multi-workspace distribution, etc. That is a **product** launch, not something this git repo replaces.
 
-**This repository does not include a Meet bot binary or Atlas Meet-join API calls** — joining Meet as a synthetic participant requires a **separate** meeting-bot fleet, Workspace/partner integrations, or a vendor; that is outside the scope of these HTTP+skill scripts.
+**What this repo is:** **BYO (bring-your-own) integration** — each team creates a Slack app from the manifest under **`skills/atlas-bridge-slack/`**, installs it to **their** workspace, and puts webhook URL + bot token + channel id in **`.env`**. Others follow **`skills/atlas-bridge-slack/SKILL.md`**, **`skills/CONNECTORS.md`**, and **`.env.example`**; there is no single “install from Slack for everyone” button unless North Model Labs ships a hosted Slack product.
 
-**What we *do* ship for Meet:** `meet_assist.py` to streamline the honest workflow: you in Meet + avatar in a **browser viewer** (link in chat or screen share). See **`skills/atlas-bridge-google-meet/SKILL.md`**.
+**OpenClaw / agents:** the **atlas-avatar** skill can be copied or published via **ClawHub** (see [Publish to ClawHub](#publish-to-clawhub-atlas-avatar-skill) below) — that is separate from Slack’s store.
+
+---
+
+## Scope: realtime vs meeting products
+
+Some vendors ship a **synthetic participant** that joins **Zoom / Meet / Teams** as a tile. **This repository does not include that** — Atlas exposes HTTP + LiveKit join info; joining someone else’s meeting product needs their SDKs, certification, and usually a separate service.
+
+**What we do ship:** Slack + Discord **incoming webhooks** to post session summaries and short **MP4** renders, and CLIs under **`scripts/bridges/`**. For **you + avatar on one machine**, a **local viewer** URL is the intended next step — see **`viewer/README.md`**.
 
 ---
 
@@ -93,8 +110,9 @@ pip install -r core/requirements.txt
 ```bash
 mkdir -p ~/.openclaw/workspace/skills
 cp -R skills/atlas-avatar ~/.openclaw/workspace/skills/atlas-avatar
-# optional bridges:
+# optional bridges (Slack / Discord webhooks):
 cp -R skills/atlas-bridge-discord ~/.openclaw/workspace/skills/
+cp -R skills/atlas-bridge-slack ~/.openclaw/workspace/skills/
 ```
 
 ### 5. Use it
@@ -111,16 +129,17 @@ python3 skills/atlas-avatar/scripts/atlas_session.py leave --session-id SESSION_
 
 Full REST surface: **`python3 core/atlas_cli.py --help`**.
 
-### Google Meet assist (after `start` → `session.json`)
+### After `start` → `session.json` (Slack / Discord)
 
-```bash
-python3 skills/atlas-bridge-google-meet/scripts/meet_assist.py checklist --meet-url "https://meet.google.com/xxx-xxxx-xxx"
-python3 skills/atlas-bridge-google-meet/scripts/meet_assist.py open-meet --meet-url "https://meet.google.com/xxx-xxxx-xxx"
-python3 skills/atlas-bridge-google-meet/scripts/meet_assist.py paste-message \
-  --meet-url "https://meet.google.com/xxx-xxxx-xxx" \
-  -f session.json \
-  --viewer-url "https://yourapp.com/avatar/room-token-route"
-```
+Post the session (and optional **MP4** on Discord) using **`skills/atlas-bridge-*/scripts/post_session.py`** — see **`skills/CONNECTORS.md`** and smoke scripts under **`scripts/bridges/`**.
+
+### Slack: where tokens live (quick map)
+
+Full step-by-step (webhook URL, `xoxb-` bot token, channel ID `C…`, what Basic Information is for): **`skills/atlas-bridge-slack/SKILL.md`** → section **“Where each value lives”**.
+
+- **Webhook URL** → *Incoming Webhooks* in the Slack app settings.  
+- **Bot token (`xoxb-`)** → *OAuth & Permissions* (not *Basic Information*).  
+- **Channel ID** → from the Slack client URL: the `C…` segment when the channel is open.
 
 ---
 
@@ -143,7 +162,7 @@ Install: `clawhub install atlas-avatar` (flags may vary — `clawhub --help`).
 ## Architecture
 
 ```
-┌─────────────────┐     OpenAI-compatible      ┌──────────────────┐
+┌─────────────────┐   Chat-style HTTP gateway   ┌──────────────────┐
 │  Agent /        │ ─────────────────────────► │  LLM (optional)  │
 │  OpenClaw       │                            └──────────────────┘
 └────────┬────────┘
@@ -156,7 +175,7 @@ Install: `clawhub install atlas-avatar` (flags may vary — `clawhub --help`).
 │  • jobs / TTS / face-swap — see skills/atlas-avatar/references/ │
 └─────────────────────────────────────────────────────────────────┘
          ▼
-   GPU avatars + LiveKit (WebRTC in **your** viewer app)
+   GPU avatars + WebRTC viewer (**your** app; Atlas returns LiveKit join fields)
 ```
 
 ---
@@ -165,36 +184,45 @@ Install: `clawhub install atlas-avatar` (flags may vary — `clawhub --help`).
 
 | Path | Purpose |
 |------|---------|
-| `google-meet/` | **Meet workflow CLI** — chains `atlas_session start` + `meet_assist` (not a Meet bot); see `google-meet/README.md` |
-| `meeting-bot/` | **OSS local helpers** — `local_conversation_demo.py` (mic viewer + optional Meet tab + screen-share), Playwright Meet, LiveKit tone; see `meeting-bot/README.md` |
-| `claude-code-avatar/` | **Claude Code** — `CLAUDE.md`, `PROMPTS.md`, `scripts/demo.sh`; see `claude-code-avatar/README.md` |
+| `viewer/` | **Planned** local browser UI — open a URL on your machine to join the LiveKit room (see `viewer/README.md`). |
+| `claude-code-avatar/` | **Terminal coding agents** — `CLAUDE.md`, `PROMPTS.md`, `scripts/demo.sh`; see `claude-code-avatar/README.md` |
 | `core/atlas_api.py` | Shared Atlas HTTP client |
 | `core/atlas_cli.py` | REST CLI |
 | `core/requirements.txt` | `requests` |
 | `skills/atlas-avatar/` | Main skill + `atlas_session.py`, `api-reference.md` |
-| `skills/atlas-bridge-*` | Slack, Discord, Meet assist, Zoom guide |
+| `skills/atlas-bridge-{slack,discord}/` | Webhooks (Slack, Discord) — see `CONNECTORS.md` |
 | `skills/CONNECTORS.md` | Connector index |
 | `INTEGRATION.md` | OpenClaw / custom LLM notes |
 | `.env.example` | Env var names |
-| `scripts/verify-env.sh` | Health + `/v1/me` |
-| `scripts/smoke-atlas.sh` | Smoke tests (optional realtime if `ATLAS_API_KEY` set) |
+| `scripts/README.md` | Index of Python CLIs vs `scripts/bridges/*.sh` |
+| `scripts/bridges/verify-env.sh` | Health + `/v1/me` |
+| `scripts/bridges/smoke-atlas.sh` | Smoke tests (optional realtime if `ATLAS_API_KEY` set) |
+| `scripts/bridges/test-slack-webhook.sh` | Posts a **fake** session line to Slack when `SLACK_WEBHOOK_URL` is set |
+| `scripts/bridges/test-slack-video-link.sh` | Slack: text + **render URL** |
+| `scripts/bridges/test-discord-webhook.sh` | Discord smoke (text + embed) |
+| `scripts/bridges/test-discord-with-mp4.sh` | Discord: **tiny synthetic MP4** (needs `ffmpeg`) |
+| `scripts/bridges/atlas-offline-to-discord.sh` | **Atlas `/v1/generate` → wait → download → Discord** attach |
+| `scripts/bridges/atlas-offline-to-slack.sh` | **Atlas offline → Slack** (MP4 via bot token + `SLACK_CHANNEL_ID`, else webhook link only) |
+| `scripts/bridges/atlas-narrated-avatar-to-discord.sh` | **Claude + ElevenLabs + S3 face → Atlas offline → Discord** |
+| `scripts/avatar_discord_narrator.py` | Narrator implementation (called by the shell wrapper above) |
+| `scripts/requirements-narrator.txt` | `boto3`, `requests` for narrator + S3 face pull |
 
 ---
 
 ## Security
 
 - Never commit API keys or webhook URLs. Use `.env` / CI secrets.
-- Do not paste LiveKit **`token`** into public Slack/Discord; use **`viewer_url`** patterns that mint tokens server-side.
+- Do not paste LiveKit **`token`** into public webhooks or chat; use **`viewer_url`** patterns that mint tokens server-side.
 
 ---
 
 ## Contributing
 
-Add a new skill folder with `SKILL.md`, scripts, and `requirements.txt`; update this README and `CONNECTORS.md`.
+Add a new skill folder with `SKILL.md`, scripts, and `requirements.txt`; update this README, `CONNECTORS.md`, and `scripts/README.md` if you add shell entrypoints.
 
 ---
 
 ## Support
 
 - **Atlas:** dashboard and your Atlas support channel.  
-- **OpenClaw:** [docs.openclaw.ai](https://docs.openclaw.ai).
+- **Agent stack:** follow the documentation shipped with your agent / OpenClaw install.

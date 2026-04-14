@@ -2,7 +2,7 @@
 # Optional end-to-end smoke: health + index always; realtime create/delete only if ATLAS_API_KEY set.
 # Realtime session may incur cost — use a test key / low-traffic window.
 set -euo pipefail
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 export ATLAS_API_BASE="${ATLAS_API_BASE:-https://api.atlasv1.com}"
 
 echo "== GET /v1/health (no auth) =="

@@ -9,6 +9,19 @@ node_modules/
 venv/
 __pycache__/
 *.pyc
-meeting-bot/.browser-profile/
-meeting-bot/session.json
 claude-code-avatar/.demo-session.json
+claude-code-avatar/test-fixtures/
+
+# Optional local / org-only (North Model Labs & partners: keep on disk; do not commit)
+scripts/pull_atlas_demo_face.py
+scripts/local/
+scripts/org/
+internal/
+atlas-internal/
+*.local.env
+.env.local
+.env.*.local
+secrets/
+*.pem
+*-service-account.json
+credentials.json

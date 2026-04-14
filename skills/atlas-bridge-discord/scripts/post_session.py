@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-"""Post Atlas session info to Discord: text + optional embeds + optional video file.
+"""Post Atlas session info via incoming webhook: text + optional embeds + optional video file.
 
 Webhook cannot join voice or stream live video into a call. For an *avatar agent* workflow:
   - Put ``viewer_url`` (or ``client_url``) in the JSON — your hosted page that connects to
-    LiveKit server-side or via short-lived links (never paste ``token`` into Discord).
-  - Optional ``--video`` attaches a finished MP4 (e.g. offline job) if under Discord's limit.
+    LiveKit server-side or via short-lived links (never paste ``token`` into the channel).
+  - Optional ``--video`` attaches a finished MP4 (e.g. offline job) if under the provider’s limit.
+
+**Message style:** ``DISCORD_MESSAGE_STYLE`` — ``minimal`` (default): caption / links only, no
+session_id bullets. Set ``full`` for verbose debug layout + rich embeds.
 """
 from __future__ import annotations
 
@@ -17,8 +20,12 @@ from pathlib import Path
 
 import requests
 
-# Discord webhook attachment limit (MiB); see Discord API docs.
+# Typical incoming-webhook attachment limit (MiB); confirm with your provider’s docs.
 MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024
+
+
+def _discord_message_style() -> str:
+    return (os.environ.get("DISCORD_MESSAGE_STYLE", "minimal") or "minimal").strip().lower()
 
 
 def _embeds_from_json(data: dict) -> list[dict]:
@@ -48,9 +55,55 @@ def _embeds_from_json(data: dict) -> list[dict]:
     return out
 
 
+def _build_body_minimal(data: dict, *, has_video_attachment: bool) -> tuple[str, list[dict]]:
+    """Caption + plain Discord links; no rich embeds, no session_id block."""
+    bridge = (data.get("bridge_note") or data.get("discord_intro") or "").strip()
+    viewer = (data.get("viewer_url") or data.get("client_url") or "").strip()
+    render = (data.get("video_url") or data.get("result_url") or "").strip()
+    parts: list[str] = []
+    if bridge:
+        parts.append(bridge)
+    if viewer:
+        parts.append(f"**Viewer:** <{viewer}>")
+    if render and not has_video_attachment:
+        parts.append(f"**Render:** <{render}>")
+    text = "\n\n".join(parts).strip()
+    if not text:
+        mode = str(data.get("mode") or "").lower()
+        text = "Atlas offline clip attached." if mode == "offline" else "Atlas session update."
+    return text, []
+
+
+def _build_body_full(data: dict) -> tuple[str, list[dict]]:
+    sid = data.get("session_id", "?")
+    room = data.get("room", "?")
+    mode = data.get("mode", "?")
+    pricing = data.get("pricing", "")
+    bridge = (data.get("bridge_note") or data.get("discord_intro") or "").strip()
+    lines = ["**Atlas avatar session**"]
+    if bridge:
+        lines.append(bridge)
+    lines += [
+        f"• session_id: `{sid}`",
+        f"• room: `{room}`",
+        f"• mode: `{mode}`",
+    ]
+    if pricing:
+        lines.append(f"• pricing: {pricing}")
+    embeds = _embeds_from_json(data)
+    if not embeds:
+        lines.append(
+            "• Add **`viewer_url`** (HTTPS) to this JSON for a clickable in-channel link to your web viewer."
+        )
+        lines.append(
+            "• Or use **`--video`** with a short MP4 from an offline job (under 25 MB)."
+        )
+    return "\n".join(lines), embeds
+
+
 def main() -> int:
     p = argparse.ArgumentParser(
-        description="Post Atlas session summary to Discord (embeds + optional MP4 attach)",
+        description="Post Atlas session summary via webhook (embeds + optional MP4 attach)",
     )
     p.add_argument("--file", "-f", help="Path to JSON file (else stdin)")
     p.add_argument(
@@ -68,27 +121,6 @@ def main() -> int:
     else:
         raw = sys.stdin.read()
     data = json.loads(raw)
-    sid = data.get("session_id", "?")
-    room = data.get("room", "?")
-    mode = data.get("mode", "?")
-    pricing = data.get("pricing", "")
-    lines = [
-        "**Atlas avatar session**",
-        f"• session_id: `{sid}`",
-        f"• room: `{room}`",
-        f"• mode: `{mode}`",
-    ]
-    if pricing:
-        lines.append(f"• pricing: {pricing}")
-    embeds = _embeds_from_json(data)
-    if not embeds:
-        lines.append(
-            "• Add **`viewer_url`** (HTTPS) to this JSON for a clickable in-channel link to your web viewer."
-        )
-        lines.append(
-            "• Or use **`--video`** with a short MP4 from an offline job (under 25 MB)."
-        )
-    content = "\n".join(lines)
 
     video_path = Path(args.video).resolve() if args.video else None
     if video_path is not None:
@@ -98,10 +130,16 @@ def main() -> int:
         n = video_path.stat().st_size
         if n > MAX_ATTACHMENT_BYTES:
             print(
-                f"Error: file {n} bytes exceeds Discord webhook limit (~25 MB).",
+                f"Error: file {n} bytes exceeds webhook attachment limit (~25 MB).",
                 file=sys.stderr,
             )
             return 2
+
+    has_vid = video_path is not None
+    if _discord_message_style() == "full":
+        content, embeds = _build_body_full(data)
+    else:
+        content, embeds = _build_body_minimal(data, has_video_attachment=has_vid)
 
     body: dict = {"content": content}
     if embeds:
@@ -122,7 +160,7 @@ def main() -> int:
     if not r.ok:
         print(r.text, file=sys.stderr)
         return 3
-    print(json.dumps({"ok": True, "discord_status": r.status_code}))
+    print(json.dumps({"ok": True, "http_status": r.status_code}))
     return 0
 
 

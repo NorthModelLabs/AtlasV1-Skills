@@ -1,0 +1,24 @@
+# Paste into Slack: api.slack.com/apps → Create New App → From a manifest → YAML
+# Then: Install App → Add New Webhook to Workspace → pick channel → copy Webhook URL
+# → SLACK_WEBHOOK_URL in .env
+_metadata:
+  major_version: 1
+  minor_version: 1
+display_information:
+  name: Atlas Avatar Bridge
+  description: Posts Atlas session summaries to a channel (Incoming Webhooks only).
+  background_color: "#2c2d30"
+features:
+  bot_user:
+    display_name: Atlas Avatar Bridge
+    always_online: false
+oauth_config:
+  scopes:
+    bot:
+      - incoming-webhook
+      - chat:write
+      - files:write
+settings:
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false
