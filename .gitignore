@@ -21,6 +21,9 @@ atlas-internal/
 *.local.env
 .env.local
 .env.*.local
+# Local clone used to test setup-realtime-viewer.sh (contains .env.local)
+.atlas-realtime-example-test/
+
 secrets/
 *.pem
 *-service-account.json

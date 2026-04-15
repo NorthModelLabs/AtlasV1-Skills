@@ -245,7 +245,7 @@ clawhub login
 clawhub publish ./skills/atlas-avatar \
   --slug atlas-avatar \
   --name "Atlas Avatar" \
-  --version 1.0.7 \
+  --version 1.0.8 \
   --tags latest
 ```
 

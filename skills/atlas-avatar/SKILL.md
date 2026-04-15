@@ -1,14 +1,14 @@
 ---
 name: atlas_avatar
 description: "Create realtime **passthrough** AI avatar sessions (LiveKit WebRTC — you bring STT/LLM/TTS and publish audio), view-only viewer tokens for multi-viewer watch, and offline lip-sync avatar videos using the Atlas API by North Model Labs. Post offline MP4 renders to Discord (webhook). Use when the user asks for Atlas avatar, talking head, realtime avatar, face animation, video from audio+image, lip sync, BYOB TTS + /v1/generate, watch-only audience, Discord delivery of renders, or GPU avatar rendering."
-version: "1.0.7"
+version: "1.0.8"
 tags: ["avatar", "video", "realtime", "livekit", "lip-sync", "atlas", "gpu", "openclaw"]
 author: "northmodellabs"
 metadata:
   openclaw:
     requires:
       env: [ATLAS_API_KEY]
-      bins: [python3]
+      bins: [python3, bash]
 ---
 
 # Atlas Avatar (OpenClaw skill)
@@ -57,7 +57,41 @@ npm run dev
 
 **Python deps:** `pip install -r core/requirements.txt` or `pip install -r skills/atlas-avatar/requirements.txt` (same pins). Prefer a **venv**.
 
-**Regression harness** (every endpoint in `core/atlas_api.py`; realtime **costs** unless `--no-realtime`): from repo root, `python3 scripts/bridges/test-atlas-api-harness.py --help`. Lighter smoke: `./scripts/bridges/smoke-atlas.sh`.
+**Regression harness** (every endpoint in `core/atlas_api.py`; realtime **costs** unless `--no-realtime`): from **avatarclaw** monorepo root, `python3 scripts/bridges/test-atlas-api-harness.py --help`. Lighter smoke: `./scripts/bridges/smoke-atlas.sh`.
+
+**Bootstrap browser viewer (ships with this skill):** `bash skills/atlas-avatar/scripts/setup-realtime-viewer.sh` — clones/updates **[atlas-realtime-example](https://github.com/NorthModelLabs/atlas-realtime-example)** under **`~/atlas-realtime-example`** (override with **`ATLAS_REALTIME_VIEWER_DIR`**), writes **`.env.local`** from **`ATLAS_API_KEY`** / **`ATLAS_API_BASE`**, copies optional **`LLM_*`** / **`ELEVENLABS_*`** from your shell, runs **`npm install`**.
+
+---
+
+## After `clawhub install atlas-avatar`
+
+1. **Location:** the skill is usually at **`<openclaw-workspace>/skills/atlas-avatar/`** (path varies — locate `SKILL.md` next to `scripts/`).
+2. **Secrets:** put **`ATLAS_API_KEY`** in OpenClaw’s env / vault so tools can read it.
+3. **Python CLI:** if `core/` is missing, set **`ATLAS_AGENT_REPO`** to a checkout of **[avatarclaw](https://github.com/NorthModelLabs/avatarclaw)** *or* rely on **`atlas_session.py`** alone inside the skill (it still needs `core/` next to a monorepo — for skill-only installs, **clone avatarclaw** and set **`ATLAS_AGENT_REPO`** to that root).
+
+## Goal: “Can I talk to my avatar?” — agent checklist
+
+When the user wants to **talk** to the avatar (not only create a session JSON in chat), do this in order:
+
+1. **Verify** `ATLAS_API_KEY` is available; if not, stop and tell them to add it ([dashboard](https://dashboard.northmodellabs.com/dashboard/keys)).
+2. **Face:** Ask for an **HTTPS face URL** or a **local image path**. If they have none, suggest a neutral stock portrait URL they can approve, or use the example app’s **default face** after Connect (see [atlas-realtime-example](https://github.com/NorthModelLabs/atlas-realtime-example) README).
+3. **Pull the UI:** from the OpenClaw workspace root (parent of `skills/`), run:
+
+```bash
+export ATLAS_API_KEY="…"   # already in env in practice
+export ATLAS_API_BASE="${ATLAS_API_BASE:-https://api.atlasv1.com}"   # optional
+# Optional — copied into the example app’s .env.local for mic + voice loop:
+# export ELEVENLABS_API_KEY=… ELEVENLABS_VOICE_ID=…
+# export LLM_API_KEY=… LLM_BASE_URL=… LLM_MODEL=…
+
+bash skills/atlas-avatar/scripts/setup-realtime-viewer.sh
+```
+
+4. **Start the app:** `cd ~/atlas-realtime-example` (or **`$ATLAS_REALTIME_VIEWER_DIR`**) and run **`npm run dev`** — keep that process running. Tell the user to open **http://localhost:3000** and use **Connect** (passthrough + persistent audio + optional Scribe are documented in the example README).
+5. **Optional — same session as a CLI `start`:** if you already ran **`atlas_session.py start`**, send them **`http://localhost:3000/watch/<session_id>`** (same API key ⇒ viewer token works).
+6. **Billing:** always **`leave --session-id …`** when they are done.
+
+The chat UI (Clawbot) still does **not** render WebRTC; the **browser tab** is where they talk and see the avatar.
 
 ---
 
@@ -88,7 +122,7 @@ Agents (OpenClaw, terminal CLIs, **Clawbot**) **do not need to clone anything** 
 
 | Goal | What to do |
 |------|------------|
-| **Full passthrough UI** (mic, face, optional `/watch/[id]` for viewers) | Same as **Reference viewer app** above: clone **[atlas-realtime-example](https://github.com/NorthModelLabs/atlas-realtime-example)** (repo root = Next app), `.env.local` with the **same** `ATLAS_API_KEY` / `ATLAS_API_URL` as your agent, `npm run dev`, then after `start` open **`http://localhost:3000/watch/<session_id>`** (or host UI). Same key ⇒ viewer token route works for any active `session_id` the agent created. |
+| **Full passthrough UI** (mic, face, optional `/watch/[id]` for viewers) | Prefer **`bash skills/atlas-avatar/scripts/setup-realtime-viewer.sh`** (writes `.env.local`, `npm install`), then **`npm run dev`** in that clone — or follow **Reference viewer app** above manually. Same API key ⇒ **`/watch/<session_id>`** works for sessions created elsewhere. |
 | **Try hosted demos** | **[northmodellabs.com/examples](https://www.northmodellabs.com/examples)** — no clone required to explore the product. |
 | **Scripts, harness, Discord/Slack bridges** in this pack | Clone **[this monorepo](https://github.com/NorthModelLabs/avatarclaw)** (or set **`ATLAS_AGENT_REPO`** to its root) so `core/` and `scripts/bridges/` exist on disk. |
 | **Minimal future default in this repo** | See **`viewer/README.md`** (planned local page). |
