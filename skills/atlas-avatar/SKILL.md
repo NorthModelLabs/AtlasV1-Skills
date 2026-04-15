@@ -1,7 +1,7 @@
 ---
 name: atlas_avatar
 description: "Create realtime **passthrough** AI avatar sessions (LiveKit WebRTC — you bring STT/LLM/TTS and publish audio), view-only viewer tokens for multi-viewer watch, and offline lip-sync avatar videos using the Atlas API by North Model Labs. Post offline MP4 renders to Discord (webhook). Use when the user asks for Atlas avatar, talking head, realtime avatar, face animation, video from audio+image, lip sync, BYOB TTS + /v1/generate, watch-only audience, Discord delivery of renders, or GPU avatar rendering."
-version: "1.0.6"
+version: "1.0.7"
 tags: ["avatar", "video", "realtime", "livekit", "lip-sync", "atlas", "gpu", "openclaw"]
 author: "northmodellabs"
 metadata:
@@ -13,11 +13,39 @@ metadata:
 
 # Atlas Avatar (OpenClaw skill)
 
+This skill drives the **Atlas HTTP API** from agents (shell / OpenClaw). For **mic + face + multi-viewer**, pair it with the same architecture as the official **[atlas-realtime-example](https://github.com/NorthModelLabs/atlas-realtime-example)** app — that repo is the **canonical UI** for passthrough realtime.
+
 Server version: check `GET /` → `version` (docs may lag production).
 
-Atlas provides **realtime passthrough** sessions (LiveKit — you supply the audio/intelligence pipeline; Atlas GPU lip-sync) and **async** offline jobs (`POST /v1/generate` → poll → result). API keys: [North Model Labs dashboard](https://dashboard.northmodellabs.com/dashboard/keys).
+Atlas provides **realtime passthrough** (LiveKit — you supply STT/LLM/TTS and publish audio; Atlas GPU lip-sync) and **async** offline jobs (`POST /v1/generate` → poll → result). API keys: [North Model Labs dashboard](https://dashboard.northmodellabs.com/dashboard/keys).
 
 **Full API surface** (error codes, webhook signature verification, limits): [northmodellabs.com/api](https://www.northmodellabs.com/api). **Live examples** in the browser: [northmodellabs.com/examples](https://www.northmodellabs.com/examples).
+
+## Reference viewer app — [atlas-realtime-example](https://github.com/NorthModelLabs/atlas-realtime-example)
+
+The example README describes the **product shape** this skill is meant to work with (same passthrough contract):
+
+| Topic | Match this skill to the example app |
+|--------|-------------------------------------|
+| **What it does** | You bring **LLM + TTS + audio pipeline**; Atlas provides **GPU + WebRTC video**; lip-sync follows whatever audio you send. |
+| **Session create** | Server-side proxy: `POST` `${ATLAS_API_URL}/v1/realtime/session` with `Authorization: Bearer …` and `mode: passthrough` (see example `app/api/session`). Agents using **only** this skill call the same path via `atlas_session.py start` / `curl`. |
+| **Client** | [`@northmodellabs/atlas-react`](https://www.npmjs.com/package/@northmodellabs/atlas-react) + [`livekit-client`](https://www.npmjs.com/package/livekit-client); optional [`@elevenlabs/react`](https://www.npmjs.com/package/@elevenlabs/react) for Scribe STT + echo cancellation (see example README). |
+| **Audio** | **Persistent audio track** in passthrough — do **not** tear down the track per utterance (example README “Persistent Audio Track Pattern”). |
+| **Watchers** | `POST /v1/realtime/session/{id}/viewer` + `/watch/[id]` in the example — same as **`viewer-token`** + any subscribe-only client here. |
+| **Architecture** | `Browser → Next /api/session → Atlas API` — mirrors how you should keep **keys off the client** and **join** with returned `livekit_url` + `token` + `room`. |
+
+**Quick start (clone the example — Next app lives at repo root; not required for API-only agents):**
+
+```bash
+git clone https://github.com/NorthModelLabs/atlas-realtime-example.git
+cd atlas-realtime-example
+npm install
+cp .env.example .env.local   # set ATLAS_API_KEY (+ optional LLM / ElevenLabs — see example file)
+npm run dev
+# http://localhost:3000 — full README: https://github.com/NorthModelLabs/atlas-realtime-example#readme
+```
+
+**Env name note:** the example uses **`ATLAS_API_URL`**. This monorepo uses **`ATLAS_API_BASE`** for the same Atlas host — set both to the same value when running agent + example side by side.
 
 ## Configuration
 
@@ -60,7 +88,7 @@ Agents (OpenClaw, terminal CLIs, **Clawbot**) **do not need to clone anything** 
 
 | Goal | What to do |
 |------|------------|
-| **Full passthrough UI** (mic, face, optional `/watch/[id]` for viewers) | Clone **[atlas-realtime-example](https://github.com/NorthModelLabs/atlas-realtime-example)**, add `.env.local` with the **same** `ATLAS_API_KEY` / `ATLAS_API_URL` as your agent, `npm install`, `npm run dev`, then after `start` open **`http://localhost:3000/watch/<session_id>`** (or the host URL from that app). Same key = viewer token route works for any active `session_id` your agent created. |
+| **Full passthrough UI** (mic, face, optional `/watch/[id]` for viewers) | Same as **Reference viewer app** above: clone **[atlas-realtime-example](https://github.com/NorthModelLabs/atlas-realtime-example)** (repo root = Next app), `.env.local` with the **same** `ATLAS_API_KEY` / `ATLAS_API_URL` as your agent, `npm run dev`, then after `start` open **`http://localhost:3000/watch/<session_id>`** (or host UI). Same key ⇒ viewer token route works for any active `session_id` the agent created. |
 | **Try hosted demos** | **[northmodellabs.com/examples](https://www.northmodellabs.com/examples)** — no clone required to explore the product. |
 | **Scripts, harness, Discord/Slack bridges** in this pack | Clone **[this monorepo](https://github.com/NorthModelLabs/avatarclaw)** (or set **`ATLAS_AGENT_REPO`** to its root) so `core/` and `scripts/bridges/` exist on disk. |
 | **Minimal future default in this repo** | See **`viewer/README.md`** (planned local page). |

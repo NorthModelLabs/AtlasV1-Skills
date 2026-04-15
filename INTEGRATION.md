@@ -47,7 +47,7 @@ Publish the **skill folder** only:
 
 ```bash
 clawhub login
-clawhub publish ./skills/atlas-avatar --slug atlas-avatar --name "Atlas Avatar" --version 1.0.6 --tags latest
+clawhub publish ./skills/atlas-avatar --slug atlas-avatar --name "Atlas Avatar" --version 1.0.7 --tags latest
 ```
 
 ## 7. Plugins
