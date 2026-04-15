@@ -1,7 +1,7 @@
 ---
 name: atlas_avatar
 description: "Create realtime **passthrough** AI avatar sessions (LiveKit WebRTC — you bring STT/LLM/TTS and publish audio), view-only viewer tokens for multi-viewer watch, and offline lip-sync avatar videos using the Atlas API by North Model Labs. Post offline MP4 renders to Discord (webhook). Use when the user asks for Atlas avatar, talking head, realtime avatar, face animation, video from audio+image, lip sync, BYOB TTS + /v1/generate, watch-only audience, Discord delivery of renders, or GPU avatar rendering."
-version: "1.0.8"
+version: "1.0.9"
 tags: ["avatar", "video", "realtime", "livekit", "lip-sync", "atlas", "gpu", "openclaw"]
 author: "northmodellabs"
 metadata:
@@ -68,6 +68,7 @@ npm run dev
 1. **Location:** the skill is usually at **`<openclaw-workspace>/skills/atlas-avatar/`** (path varies — locate `SKILL.md` next to `scripts/`).
 2. **Secrets:** put **`ATLAS_API_KEY`** in OpenClaw’s env / vault so tools can read it.
 3. **Python CLI:** if `core/` is missing, set **`ATLAS_AGENT_REPO`** to a checkout of **[avatarclaw](https://github.com/NorthModelLabs/avatarclaw)** *or* rely on **`atlas_session.py`** alone inside the skill (it still needs `core/` next to a monorepo — for skill-only installs, **clone avatarclaw** and set **`ATLAS_AGENT_REPO`** to that root).
+4. **OpenClaw host:** install, update, and verify OpenClaw only via **[official documentation](https://docs.openclaw.ai/install)** — do not pin or copy OpenClaw versions from this skill.
 
 ## Goal: “Can I talk to my avatar?” — agent checklist
 

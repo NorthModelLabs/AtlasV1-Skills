@@ -105,7 +105,11 @@ export ATLAS_API_BASE="https://api.atlasv1.com"
 pip install -r core/requirements.txt
 ```
 
-### 4. Install skills into OpenClaw (example)
+### 4. Install OpenClaw (the agent host)
+
+Use **[OpenClaw’s official install documentation](https://docs.openclaw.ai/install)** only (install, update, uninstall, verify). This repo does not pin or document OpenClaw versions.
+
+### 5. Install skills into OpenClaw (example)
 
 ```bash
 mkdir -p ~/.openclaw/workspace/skills
@@ -115,7 +119,7 @@ cp -R skills/atlas-bridge-discord ~/.openclaw/workspace/skills/
 cp -R skills/atlas-bridge-slack ~/.openclaw/workspace/skills/
 ```
 
-### 5. Use it
+### 6. Use it
 
 Start an OpenClaw session and ask for a realtime avatar or offline render — the agent should follow `skills/atlas-avatar/SKILL.md`.
 
@@ -245,7 +249,7 @@ clawhub login
 clawhub publish ./skills/atlas-avatar \
   --slug atlas-avatar \
   --name "Atlas Avatar" \
-  --version 1.0.8 \
+  --version 1.0.9 \
   --tags latest
 ```
 

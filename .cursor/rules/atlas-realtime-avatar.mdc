@@ -1,0 +1,21 @@
+---
+description: When the user wants to talk to their Atlas avatar in realtime (mic, face, LiveKit), use their env and the official viewer app.
+alwaysApply: false
+---
+
+# Atlas realtime avatar (talk in browser)
+
+When the user asks to **talk to their avatar**, **Atlas realtime**, **passthrough avatar**, or similar:
+
+**OpenClaw:** Send users to **[https://docs.openclaw.ai/install](https://docs.openclaw.ai/install)** for install, update, verify, and uninstall. Do not pin OpenClaw versions or duplicate install commands in chat.
+
+1. **Secrets:** Use **`ATLAS_API_KEY`** (and optional **`ATLAS_API_BASE`**) from the project **`.env`** or OpenClaw env. Never paste keys into chat.
+2. **Bootstrap UI** (from repo root):  
+   `bash skills/atlas-avatar/scripts/setup-realtime-viewer.sh`  
+   Override install dir with **`ATLAS_REALTIME_VIEWER_DIR`** if needed. Re-run after changing env so **`.env.local`** picks up **`LLM_*`** / **`ELEVENLABS_*`** when those vars are exported.
+3. **Run the app:** `cd` to that directory, **`npm run dev`**. If port 3000 is busy, Next may use **3001** — read the terminal line **`Local:`** and open that URL.
+4. **User action:** They open the app in a **real browser**, click **Connect**, allow **microphone** if prompted. WebRTC does not run inside the chat panel.
+5. **Optional CLI session:** `python3 skills/atlas-avatar/scripts/atlas_session.py start --face-url …` then send them **`http://localhost:<port>/watch/<session_id>`** with the same API key.
+6. **Billing:** Remind them to **Disconnect** / **`leave`** when done.
+
+If the UI shows **“LLM + TTS not configured”**, the example app needs **`LLM_API_KEY`** (and related **`LLM_*`**) plus **`ELEVENLABS_API_KEY`** in **`.env.local`** — export them in the shell before re-running the setup script, or edit **`.env.local`** manually (do not commit).

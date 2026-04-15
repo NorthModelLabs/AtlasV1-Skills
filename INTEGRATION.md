@@ -47,14 +47,26 @@ Publish the **skill folder** only:
 
 ```bash
 clawhub login
-clawhub publish ./skills/atlas-avatar --slug atlas-avatar --name "Atlas Avatar" --version 1.0.8 --tags latest
+clawhub publish ./skills/atlas-avatar --slug atlas-avatar --name "Atlas Avatar" --version 1.0.9 --tags latest
 ```
 
 ## 7. Plugins
 
 Use an OpenClaw **plugin** when you need typed tools, streaming, or no shell — the **core** CLI is the middle ground between raw curl and a full plugin.
 
-## 8. Support
+## 8. OpenClaw (agent host)
+
+**Install, update, verify, uninstall, and security notices:** use only **[OpenClaw’s official documentation](https://docs.openclaw.ai/install)** (that page links onward to uninstall, gateway, troubleshooting, etc.). **Do not** copy version pins or install one-liners from this repo — they drift and are not maintained here.
+
+**Known advisory (details and remediation on GitHub / OpenClaw docs):** [CVE-2026-33579](https://nvd.nist.gov/vuln/detail/CVE-2026-33579) — [GHSA-hc5h-pmr3-3497](https://github.com/openclaw/openclaw/security/advisories/GHSA-hc5h-pmr3-3497).
+
+### After OpenClaw is installed: use this skill
+
+Per **[Creating skills](https://docs.openclaw.ai/tools/creating-skills)** — copy **`skills/atlas-avatar`** into your OpenClaw skills directory (often under **`~/.openclaw/workspace/skills/`**), then start a **new session** or restart the gateway so the skill loads. Further CLI steps are in the OpenClaw docs above.
+
+**Optional:** `./scripts/test-openclaw-cli-latest.sh` only prints the official doc URLs and, if **`openclaw`** is already on your **`PATH`**, runs **`openclaw --version`** (no installs, no registry queries).
+
+## 9. Support
 
 - **Atlas:** dashboard and support.  
 - **OpenClaw:** [docs.openclaw.ai](https://docs.openclaw.ai).
