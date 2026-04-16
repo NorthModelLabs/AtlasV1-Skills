@@ -68,7 +68,7 @@ python3 skills/atlas-avatar/scripts/atlas_session.py leave --session-id SESSION_
 
 > I have `./assets/headshot.jpg` and `./assets/voice.mp3`. Create an offline Atlas avatar video job, wait for completion, and print the download URL.
 
-Agent sequence: `offline --audio … --image …` → `jobs-wait` → `jobs-result`.
+Agent sequence: `atlas_session.py offline --audio … --image …` → `atlas_session.py jobs-wait` → `atlas_session.py jobs-result`.
 
 ---
 

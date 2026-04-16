@@ -9,9 +9,11 @@ Open-source **skills** and **CLI tools** for AI coding agents ([OpenClaw](https:
 | OpenClaw / skill install | **Getting started** below + `skills/atlas-avatar/SKILL.md` |
 | A terminal coding agent driving shell | `claude-code-avatar/README.md` + root `CLAUDE.md` |
 | Raw HTTP / curl | `skills/atlas-avatar/references/api-reference.md`, `core/atlas_cli.py --help` |
-| Slack / Discord webhooks, **optional Discord bot** (`/ask` + @mention = LLM answer + video; `/generate` = verbatim), offline MP4 | This README ([Discord bot setup](#discord-webhook-vs-interactive-bot)), `skills/CONNECTORS.md`, `skills/atlas-bridge-discord/SKILL.md`, `scripts/bridges/` |
+| **Telegram bot** (auto-playing video + realtime Web App) | `skills/atlas-bridge-telegram/SKILL.md` |
+| Slack / Discord webhooks, **optional Discord bot** (`/ask`, `/generate`, `/talk` realtime, `@mention`, reply-to-bot), offline MP4 | This README ([Discord bot setup](#discord-webhook-vs-interactive-bot)), `skills/CONNECTORS.md`, `skills/atlas-bridge-discord/SKILL.md`, `scripts/bridges/` |
 | Slack “marketplace” / public listing | **Not from this repo** — see [Distribution](#distribution-slack-app-directory-vs-this-repo) below |
-| Local browser viewer (planned) | `viewer/README.md` |
+| Realtime viewer (deploy once, any device) | [atlas-avatar-viewer](https://github.com/NorthModelLabs/atlas-avatar-viewer) — set `ATLAS_VIEWER_BASE_URL` for `/talk` |
+| Full local viewer (Next.js) | [atlas-realtime-example](https://github.com/NorthModelLabs/atlas-realtime-example) |
 
 This pack is **API-first**: you get `livekit_url`, `token`, and `room` from Atlas, then connect a **browser or app** you control. It is **not** a drop-in “synthetic participant joins Zoom/Meet/Teams” product (see [Scope](#scope-realtime-vs-meeting-products) below).
 
@@ -61,7 +63,8 @@ Copy a skill into your agent workspace (e.g. `~/.openclaw/workspace/skills/`) or
 |-------|---------------------------|--------------|
 | **`skills/atlas-avatar/`** | Dashboard + API `pricing` / `GET /v1/me` | Core Atlas API: realtime sessions, **`POST …/viewer`** watch tokens, offline jobs, jobs poll, face-swap — `SKILL.md` + **`atlas_session.py`** verb CLI + **`run_atlas_cli.py`**. |
 | **`skills/atlas-bridge-slack/`** | Webhook + your Slack app (provider billing is yours) | **Incoming webhook** text/link + optional **bot token** MP4 upload (`post_session.py`, `scripts/bridges/atlas-offline-to-slack.sh`). |
-| **`skills/atlas-bridge-discord/`** | Webhook only | Post summary + optional **`viewer_url`** embed + optional **MP4** attach; optional **bot**: **`/ask`** + **@mention** (Claude answer → lip-sync), **`/generate`** (verbatim script). |
+| **`skills/atlas-bridge-discord/`** | Webhook + optional interactive bot | Post summary + optional **`viewer_url`** embed + optional **MP4** attach; optional **bot**: **`/ask`** + **@mention** (Claude answer → lip-sync), **`/generate`** (verbatim script). |
+| **`skills/atlas-bridge-telegram/`** | BotFather token (free) | **Bot**: **`/ask`** (Claude + **auto-playing** MP4), **`/generate`** (verbatim MP4), **`/talk`** (realtime avatar via **Web App** button inside Telegram), plain text = `/ask`. |
 
 Overview table and copy commands: **`skills/CONNECTORS.md`**.
 
@@ -81,7 +84,7 @@ Overview table and copy commands: **`skills/CONNECTORS.md`**.
 
 Some vendors ship a **synthetic participant** that joins **Zoom / Meet / Teams** as a tile. **This repository does not include that** — Atlas exposes HTTP + LiveKit join info; joining someone else’s meeting product needs their SDKs, certification, and usually a separate service.
 
-**What we do ship:** Slack + Discord **incoming webhooks** to post session summaries and short **MP4** renders, an **optional Discord bot** you run locally (`./scripts/bridges/run-discord-avatar-bot.sh`) that replies with offline lip-sync clips, and CLIs under **`scripts/bridges/`**. For **you + avatar on one machine**, a **local viewer** URL is the intended next step — see **`viewer/README.md`**.
+**What we do ship:** Slack + Discord **incoming webhooks** to post session summaries and short **MP4** renders, an **optional Discord bot** that replies with offline lip-sync clips, a **Telegram bot** with auto-playing video and realtime Web App buttons, and CLIs under **`scripts/bridges/`**. For **you + avatar on one machine**, a **local viewer** URL is the intended next step — see **`viewer/README.md`**.
 
 ---
 
@@ -114,9 +117,10 @@ Use **[OpenClaw’s official install documentation](https://docs.openclaw.ai/ins
 ```bash
 mkdir -p ~/.openclaw/workspace/skills
 cp -R skills/atlas-avatar ~/.openclaw/workspace/skills/atlas-avatar
-# optional bridges (Slack / Discord webhooks):
+# optional bridges (Slack / Discord / Telegram):
 cp -R skills/atlas-bridge-discord ~/.openclaw/workspace/skills/
 cp -R skills/atlas-bridge-slack ~/.openclaw/workspace/skills/
+cp -R skills/atlas-bridge-telegram ~/.openclaw/workspace/skills/
 ```
 
 ### 6. Use it
@@ -133,7 +137,7 @@ python3 skills/atlas-avatar/scripts/atlas_session.py leave --session-id SESSION_
 
 Full REST surface: **`python3 core/atlas_cli.py --help`**.
 
-### After `start` → `session.json` (Slack / Discord)
+### After `start` → `session.json` (Slack / Discord / Telegram)
 
 Post the session (and optional **MP4** on Discord) using **`skills/atlas-bridge-*/scripts/post_session.py`** — see **`skills/CONNECTORS.md`** and smoke scripts under **`scripts/bridges/`**.
 
@@ -282,13 +286,13 @@ Install: `clawhub install atlas-avatar` (flags may vary — `clawhub --help`).
 
 | Path | Purpose |
 |------|---------|
-| `viewer/` | **Planned** local browser UI — open a URL on your machine to join the LiveKit room (see `viewer/README.md`). |
+| `viewer/` | **Planned** local browser UI (no code yet — use [atlas-realtime-example](https://github.com/NorthModelLabs/atlas-realtime-example) today); see `viewer/README.md` for design notes. |
 | `claude-code-avatar/` | **Terminal coding agents** — `CLAUDE.md`, `PROMPTS.md`, `scripts/demo.sh`; see `claude-code-avatar/README.md` |
 | `core/atlas_api.py` | Shared Atlas HTTP client |
 | `core/atlas_cli.py` | REST CLI |
 | `core/requirements.txt` | `requests` |
 | `skills/atlas-avatar/` | Main skill + `atlas_session.py`, `api-reference.md` |
-| `skills/atlas-bridge-{slack,discord}/` | Webhooks (Slack, Discord) — see `CONNECTORS.md` |
+| `skills/atlas-bridge-{slack,discord,telegram}/` | Bridges (Slack, Discord, Telegram) — see `CONNECTORS.md` |
 | `skills/CONNECTORS.md` | Connector index |
 | `INTEGRATION.md` | OpenClaw / custom LLM notes |
 | `.env.example` | Env var names |
@@ -302,6 +306,7 @@ Install: `clawhub install atlas-avatar` (flags may vary — `clawhub --help`).
 | `scripts/bridges/test-discord-with-mp4.sh` | Discord: **tiny synthetic MP4** (needs `ffmpeg`) |
 | `scripts/bridges/atlas-offline-to-discord.sh` | **Atlas `/v1/generate` → wait → download → Discord** attach |
 | `scripts/bridges/run-discord-avatar-bot.sh` | **Discord bot**: `/ask` + @mention (LLM + video), `/generate` (verbatim video) |
+| `scripts/bridges/run-telegram-avatar-bot.sh` | **Telegram bot**: `/ask` (auto-playing MP4), `/talk` (realtime Web App), `/generate` |
 | `scripts/bridges/atlas-offline-to-slack.sh` | **Atlas offline → Slack** (MP4 via bot token + `SLACK_CHANNEL_ID`, else webhook link only) |
 | `scripts/bridges/atlas-narrated-avatar-to-discord.sh` | **Claude + ElevenLabs + S3 face → Atlas offline → Discord** |
 | `scripts/avatar_discord_narrator.py` | Narrator implementation (called by the shell wrapper above) |
@@ -311,7 +316,7 @@ Install: `clawhub install atlas-avatar` (flags may vary — `clawhub --help`).
 
 ## Security
 
-- Never commit API keys, **Discord webhook URLs**, or **`DISCORD_BOT_TOKEN`**. Use `.env` / CI secrets.
+- Never commit API keys, **Discord webhook URLs**, **`DISCORD_BOT_TOKEN`**, or **`TELEGRAM_BOT_TOKEN`**. Use `.env` / CI secrets.
 - Do not paste LiveKit **`token`** into public webhooks or chat; use **`viewer_url`** patterns that mint tokens server-side.
 
 ---

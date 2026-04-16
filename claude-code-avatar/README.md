@@ -66,7 +66,7 @@ See **`PROMPTS.md`** for copy-paste prompts. The agent should translate them int
 
 ## 6. Limits (honest)
 
-- No bundled **synthetic meeting-tile bot** — Atlas returns LiveKit join info; use your **viewer** (see `viewer/README.md`) or Slack/Discord bridges (`skills/CONNECTORS.md`).
+- No bundled **synthetic meeting-tile bot** — Atlas returns LiveKit join info; use your **viewer** (see `viewer/README.md`) or Slack/Discord/Telegram bridges (`skills/CONNECTORS.md`).
 - **Offline** needs real **audio + image files** on disk.
 - **Passthrough** realtime needs a reachable **`--face-url`** (HTTPS image) if you are not using `--face` with a local file.
 

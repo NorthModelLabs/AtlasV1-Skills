@@ -57,7 +57,7 @@ npm run dev
 
 **Python deps:** `pip install -r core/requirements.txt` or `pip install -r skills/atlas-avatar/requirements.txt` (same pins). Prefer a **venv**.
 
-**Regression harness** (every endpoint in `core/atlas_api.py`; realtime **costs** unless `--no-realtime`): from **avatarclaw** monorepo root, `python3 scripts/bridges/test-atlas-api-harness.py --help`. Lighter smoke: `./scripts/bridges/smoke-atlas.sh`.
+**Regression harness** (every endpoint in `core/atlas_api.py`; realtime **costs** unless `--no-realtime`): from the **atlas-skills** monorepo root, `python3 scripts/bridges/test-atlas-api-harness.py --help`. Lighter smoke: `./scripts/bridges/smoke-atlas.sh`.
 
 **Bootstrap browser viewer (ships with this skill):** `bash skills/atlas-avatar/scripts/setup-realtime-viewer.sh` — clones/updates **[atlas-realtime-example](https://github.com/NorthModelLabs/atlas-realtime-example)** under **`~/atlas-realtime-example`** (override with **`ATLAS_REALTIME_VIEWER_DIR`**), writes **`.env.local`** from **`ATLAS_API_KEY`** / **`ATLAS_API_BASE`**, copies optional **`LLM_*`** / **`ELEVENLABS_*`** from your shell, runs **`npm install`**.
 
@@ -67,7 +67,7 @@ npm run dev
 
 1. **Location:** the skill is usually at **`<openclaw-workspace>/skills/atlas-avatar/`** (path varies — locate `SKILL.md` next to `scripts/`).
 2. **Secrets:** put **`ATLAS_API_KEY`** in OpenClaw’s env / vault so tools can read it.
-3. **Python CLI:** if `core/` is missing, set **`ATLAS_AGENT_REPO`** to a checkout of **[avatarclaw](https://github.com/NorthModelLabs/avatarclaw)** *or* rely on **`atlas_session.py`** alone inside the skill (it still needs `core/` next to a monorepo — for skill-only installs, **clone avatarclaw** and set **`ATLAS_AGENT_REPO`** to that root).
+3. **Python CLI:** if `core/` is missing, set **`ATLAS_AGENT_REPO`** to a checkout of **[atlas-skills](https://github.com/NorthModelLabs/atlas-skills)** *or* rely on **`atlas_session.py`** alone inside the skill (it still needs `core/` next to a monorepo — for skill-only installs, **clone atlas-skills** and set **`ATLAS_AGENT_REPO`** to that root).
 4. **OpenClaw host:** install, update, and verify OpenClaw only via **[official documentation](https://docs.openclaw.ai/install)** — do not pin or copy OpenClaw versions from this skill.
 
 ## Goal: “Can I talk to my avatar?” — agent checklist
@@ -125,8 +125,8 @@ Agents (OpenClaw, terminal CLIs, **Clawbot**) **do not need to clone anything** 
 |------|------------|
 | **Full passthrough UI** (mic, face, optional `/watch/[id]` for viewers) | Prefer **`bash skills/atlas-avatar/scripts/setup-realtime-viewer.sh`** (writes `.env.local`, `npm install`), then **`npm run dev`** in that clone — or follow **Reference viewer app** above manually. Same API key ⇒ **`/watch/<session_id>`** works for sessions created elsewhere. |
 | **Try hosted demos** | **[northmodellabs.com/examples](https://www.northmodellabs.com/examples)** — no clone required to explore the product. |
-| **Scripts, harness, Discord/Slack bridges** in this pack | Clone **[this monorepo](https://github.com/NorthModelLabs/avatarclaw)** (or set **`ATLAS_AGENT_REPO`** to its root) so `core/` and `scripts/bridges/` exist on disk. |
-| **Minimal future default in this repo** | See **`viewer/README.md`** (planned local page). |
+| **Scripts, harness, Discord/Slack bridges** in this pack | Clone **[this monorepo](https://github.com/NorthModelLabs/atlas-skills)** (or set **`ATLAS_AGENT_REPO`** to its root) so `core/` and `scripts/bridges/` exist on disk. |
+| **Minimal future default in this repo** | **Not yet implemented** — see **`viewer/README.md`** for design notes; use **atlas-realtime-example** above today. |
 
 Do **not** treat “clone the skills monorepo” as mandatory for every user — only for **full tooling** or when the agent must run paths under `scripts/` or `core/`.
 
@@ -352,4 +352,4 @@ Use OpenClaw (or any agent) for **text/tools**; use this skill to call **Atlas p
 
 ## Related bridges
 
-This monorepo includes **Slack** and **Discord** webhook bridges under `skills/` — see **`CONNECTORS.md`**. Incoming webhooks can **post** session info; some bridges add a **`viewer_url`** embed and optionally attach a short **MP4**. A **local default viewer** (open a tab on your machine instead of a meeting product) is sketched in **`viewer/README.md`**.
+This monorepo includes **Slack**, **Discord**, and **Telegram** bridges under `skills/` — see **`CONNECTORS.md`**. Incoming webhooks can **post** session info; some bridges add a **`viewer_url`** embed and optionally attach a short **MP4**. A **local default viewer** is planned — see **`viewer/README.md`** for design notes; use **[atlas-realtime-example](https://github.com/NorthModelLabs/atlas-realtime-example)** today.

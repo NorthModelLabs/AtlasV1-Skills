@@ -1,6 +1,6 @@
 ---
 name: atlas_bridge_discord
-description: "Post Atlas avatar session info via incoming webhook, or run an optional Discord bot: /ask, @mention, and reply-to-bot (Claude + lip-sync MP4); /generate (verbatim). Not a voice-channel bot."
+description: "Post Atlas avatar session info via incoming webhook, or run an optional Discord bot: /ask, @mention, reply-to-bot (Claude + lip-sync MP4); /generate (verbatim); /talk (realtime avatar viewer); /endtalk. Not a voice-channel bot."
 version: "0.3.0"
 tags: ["atlas", "discord", "webhook", "bridge", "openclaw"]
 author: "northmodellabs"
@@ -15,7 +15,7 @@ metadata:
 
 **Webhook** — post to a channel via **incoming webhook** URL (one-way): session summary, links, optional MP4 attach.
 
-**Optional bot** (`skills/atlas-bridge-discord/scripts/discord_avatar_bot.py`) — **24/7 process you host** (e.g. `./scripts/bridges/run-discord-avatar-bot.sh`). Slash **`/ask`** or **`@BotName …`**: **Claude** → **Answer:** + MP4 (avatar speaks the answer). **Reply** to any bot message with text: same with prior message as context. Slash **`/generate`**: **verbatim** script → MP4. LLM paths need **`HELICONE_API_KEY`** (default: Helicone AI Gateway) or **`ANTHROPIC_API_KEY`** (direct); optional **`HELICONE_ANTHROPIC_PROXY=1`** with both keys for legacy **`anthropic.helicone.ai`**. **`DISCORD_MESSAGE_CONTENT_INTENT=1`** + Portal toggle for replies and @mentions. This is **not** live WebRTC in a voice channel.
+**Optional bot** (`skills/atlas-bridge-discord/scripts/discord_avatar_bot.py`) — **24/7 process you host** (e.g. `./scripts/bridges/run-discord-avatar-bot.sh`). Slash **`/ask`** or **`@BotName …`**: **Claude** → **Answer:** + MP4 (avatar speaks the answer). **Reply** to any bot message with text: same with prior message as context. Slash **`/generate`**: **verbatim** script → MP4. **`/talk`**: start a **realtime** avatar session and get a viewer link (set **`ATLAS_VIEWER_BASE_URL`** to your deployed [atlas-avatar-viewer](https://github.com/NorthModelLabs/atlas-avatar-viewer)). **`/endtalk`**: close the session (stops billing). LLM paths need **`HELICONE_API_KEY`** (default: Helicone AI Gateway) or **`ANTHROPIC_API_KEY`** (direct); optional **`HELICONE_ANTHROPIC_PROXY=1`** with both keys for legacy **`anthropic.helicone.ai`**. **`DISCORD_MESSAGE_CONTENT_INTENT=1`** + Portal toggle for replies and @mentions.
 
 ### What gets posted (`DISCORD_MESSAGE_STYLE`)
 
@@ -25,7 +25,7 @@ metadata:
 ## What it still is **not**
 
 - Does **not** join **voice** channels or stream realtime WebRTC into calls (needs a full bot + media gateway + bridge to LiveKit — separate product).
-- Does **not** host the **browser viewer** — use your app or the planned **`viewer/`** local UI in this repo.
+- Does **not** host the **browser viewer** — deploy **[atlas-avatar-viewer](https://github.com/NorthModelLabs/atlas-avatar-viewer)** and set `ATLAS_VIEWER_BASE_URL` for `/talk`.
 
 ## Prerequisites (webhook)
 
@@ -42,7 +42,7 @@ metadata:
 
 **Slash commands:** Global registration can lag; Discord may show **“This command is outdated”** until the client refreshes — **reload Discord (Ctrl+R)** and re-pick the command from `/`. Set **`DISCORD_GUILD_ID`** in `.env` (your server’s numeric id) to register **`/ask`** and **`/generate`** only in that server — **sync is immediate** (see root README). **@mentions** work once the bot is online if **Message Content Intent** is enabled.
 
-**Env:** `DISCORD_BOT_TOKEN`, `ATLAS_API_KEY`; for **`/ask`** / **reply-to-bot**: `HELICONE_API_KEY` (gateway default) or `ANTHROPIC_API_KEY` (direct). `LLM_MODEL` defaults to `claude-sonnet-4` (gateway) or `claude-sonnet-4-20250514` (native). `HELICONE_ANTHROPIC_PROXY=1` + both keys → legacy proxy. Optional `ELEVENLABS_API_KEY` / `ELEVENLABS_VOICE_ID`, `ATLAS_OFFLINE_IMAGE`.
+**Env:** `DISCORD_BOT_TOKEN`, `ATLAS_API_KEY`; for **`/ask`** / **reply-to-bot**: `HELICONE_API_KEY` (gateway default) or `ANTHROPIC_API_KEY` (direct). `LLM_MODEL` defaults to `claude-sonnet-4` (gateway) or `claude-sonnet-4-20250514` (native). `HELICONE_ANTHROPIC_PROXY=1` + both keys → legacy proxy. Optional `ELEVENLABS_API_KEY` / `ELEVENLABS_VOICE_ID`, `ATLAS_OFFLINE_IMAGE`. For **`/talk`**: `ATLAS_VIEWER_BASE_URL` (deployed [atlas-avatar-viewer](https://github.com/NorthModelLabs/atlas-avatar-viewer)).
 
 ## Usage (webhook)
 

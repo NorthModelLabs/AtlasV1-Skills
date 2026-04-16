@@ -1,6 +1,6 @@
 # Integrating Atlas Avatar with OpenClaw
 
-Part of the **[avatarclaw](https://github.com/NorthModelLabs/avatarclaw)** monorepo (`core/` + `skills/`). For developers wiring OpenClaw (or any chat-completions–shaped HTTP client) with Atlas GPU avatars.
+Part of the **[atlas-skills](https://github.com/NorthModelLabs/atlas-skills)** monorepo (`core/` + `skills/`). For developers wiring OpenClaw (or any chat-completions–shaped HTTP client) with Atlas GPU avatars.
 
 ## 1. Roles
 
@@ -16,7 +16,7 @@ Copy **`skills/atlas-avatar`** into an OpenClaw skills path ([Creating skills](h
 
 ```bash
 mkdir -p ~/.openclaw/workspace/skills
-cp -R /path/to/avatarclaw/skills/atlas-avatar ~/.openclaw/workspace/skills/
+cp -R /path/to/atlas-skills/skills/atlas-avatar ~/.openclaw/workspace/skills/
 ```
 
 **Recommended:** keep a **full clone** of the repo so `core/atlas_cli.py` exists. If the skill lives alone, set **`ATLAS_AGENT_REPO`** to the monorepo root and call `skills/atlas-avatar/scripts/run_atlas_cli.py`.
@@ -25,7 +25,7 @@ cp -R /path/to/avatarclaw/skills/atlas-avatar ~/.openclaw/workspace/skills/
 export ATLAS_API_KEY="ak_..."
 export ATLAS_API_BASE="https://api.atlasv1.com"
 # optional if skill copied without core/:
-# export ATLAS_AGENT_REPO="/path/to/avatarclaw"
+# export ATLAS_AGENT_REPO="/path/to/atlas-skills"
 ```
 
 ## 3. Python CLI vs curl

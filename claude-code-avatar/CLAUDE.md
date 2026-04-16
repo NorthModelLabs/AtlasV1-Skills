@@ -27,7 +27,7 @@ Use this file when the agent should drive **North Model Labs Atlas** from this m
 
 - Never print or commit real keys. Redact `token` in logs.
 - After `start`, always `leave --session-id …` when done (billing).
-- Atlas does **not** join Meet/Zoom/Teams as a bot. After `start`, open your **viewer** with `livekit_url` + `token` + `room` (planned default: `viewer/README.md`) or post `viewer_url` to Discord/Slack.
+- Atlas does **not** join Meet/Zoom/Teams as a bot. After `start`, open your **viewer** with `livekit_url` + `token` + `room` (use [atlas-realtime-example](https://github.com/NorthModelLabs/atlas-realtime-example) or see `viewer/README.md` for a planned local default) or post `viewer_url` to Discord/Slack.
 
 ## Docs in this repo
 

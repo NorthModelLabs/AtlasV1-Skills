@@ -9,18 +9,22 @@ if [[ -z "${ATLAS_API_KEY:-}" ]]; then
   exit 1
 fi
 
+TMP_HEALTH="$(mktemp)"
+TMP_ME="$(mktemp)"
+trap 'rm -f "$TMP_HEALTH" "$TMP_ME"' EXIT
+
 echo "GET ${BASE}/v1/health"
-code=$(curl -sS -o /tmp/atlas-v1-health.txt -w "%{http_code}" "${BASE}/v1/health")
+code=$(curl -sS -o "$TMP_HEALTH" -w "%{http_code}" "${BASE}/v1/health")
 echo "HTTP ${code}"
-head -c 800 /tmp/atlas-v1-health.txt
+head -c 800 "$TMP_HEALTH"
 echo
 
 echo "GET ${BASE}/v1/me (auth check)"
-code=$(curl -sS -o /tmp/atlas-me.txt -w "%{http_code}" \
+code=$(curl -sS -o "$TMP_ME" -w "%{http_code}" \
   -H "Authorization: Bearer ${ATLAS_API_KEY}" \
   "${BASE}/v1/me")
 echo "HTTP ${code}"
-head -c 800 /tmp/atlas-me.txt
+head -c 800 "$TMP_ME"
 echo
 
 if [[ "${code}" != "200" ]]; then

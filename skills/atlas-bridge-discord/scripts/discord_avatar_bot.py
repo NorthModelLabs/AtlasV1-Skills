@@ -9,6 +9,8 @@
 - **Reply to any of the bot's messages** with text — same LLM + lip-sync as ``/ask``, but the model sees
   your **previous bot message** as context (thread-style, like replying in Grok).
 - **``/generate``** — lip-sync **exactly** the ``script`` you type (verbatim).
+- **``/talk``** — start a **realtime** avatar session and get a viewer link (mic + video, LiveKit).
+- **``/endtalk``** — close your active realtime session (stops billing).
 - **@mention** — same as **``/ask``**: natural **Claude** reply + **Answer:** + MP4 (text after the mention is the prompt).
 
 **Message Content** intent must be on in the Portal and ``DISCORD_MESSAGE_CONTENT_INTENT=1`` for any
@@ -29,6 +31,7 @@ Env
 **Optional:** ``HELICONE_ANTHROPIC_PROXY=1`` with both keys for legacy Helicone Anthropic proxy. ``ELEVENLABS_API_KEY``
 (+ ``ELEVENLABS_VOICE_ID``) for speech; else test tone WAV.
 ``ATLAS_OFFLINE_IMAGE`` — face image (default: claude-code-avatar test fixture).
+``ATLAS_VIEWER_BASE_URL`` — deployed viewer (e.g. ``https://atlas-avatar-viewer.vercel.app``) for ``/talk`` button.
 ``DISCORD_MESSAGE_CONTENT_INTENT=1`` — request **Message Content** intent for @mention text; must also
 be enabled in the Developer Portal (Bot → Privileged Gateway Intents). Omit if you only use slash commands.
 ``DISCORD_AVATAR_DEBUG=1`` — log reply-to-bot / reference resolution to stderr (no message bodies).
@@ -205,6 +208,35 @@ def _render_offline_video(script: str) -> tuple[Path | None, str | None, str | N
 
 
 _render_lock = asyncio.Lock()
+
+# Per-user active realtime session: user_id → {"session_id": ...}
+_active_talk: dict[int, dict[str, Any]] = {}
+_talk_locks: dict[int, asyncio.Lock] = {}
+
+
+def _talk_lock_for(user_id: int) -> asyncio.Lock:
+    if user_id not in _talk_locks:
+        _talk_locks[user_id] = asyncio.Lock()
+    return _talk_locks[user_id]
+
+
+def _create_realtime_session(face_url: str | None = None) -> dict[str, Any]:
+    atlas = sys.executable
+    session_py = str(_REPO / "skills/atlas-avatar/scripts/atlas_session.py")
+    cmd = [atlas, session_py, "start"]
+    if face_url:
+        cmd += ["--face-url", face_url]
+    return _run_json(cmd)
+
+
+def _leave_session(session_id: str) -> None:
+    atlas = sys.executable
+    session_py = str(_REPO / "skills/atlas-avatar/scripts/atlas_session.py")
+    subprocess.run(
+        [atlas, session_py, "leave", "--session-id", session_id],
+        cwd=_REPO, capture_output=True, timeout=30, check=False,
+        env=os.environ.copy(),
+    )
 
 
 def _strip_mentions(content: str) -> str:
@@ -502,6 +534,99 @@ def main() -> int:
         except Exception as e:
             await send(content=f"Error: {e!s}"[:1900])
 
+    @bot.tree.command(
+        name="talk",
+        description="Start a realtime avatar session — talk to the avatar live with your mic.",
+    )
+    @_guild_decorator
+    async def talk_cmd(interaction: discord.Interaction) -> None:
+        user_id = interaction.user.id
+        lock = _talk_lock_for(user_id)
+
+        if lock.locked():
+            await interaction.response.send_message(
+                "Already creating a session for you — hang on!", ephemeral=True,
+            )
+            return
+
+        async with lock:
+            existing = _active_talk.get(user_id)
+            if existing:
+                sid = existing.get("session_id", "")[:12]
+                await interaction.response.send_message(
+                    f"You already have an active session ({sid}…).\n"
+                    f"Use `/endtalk` to close it first, then `/talk` again.",
+                    ephemeral=True,
+                )
+                return
+
+            await interaction.response.defer(thinking=True)
+            try:
+                session = await asyncio.to_thread(_create_realtime_session)
+            except Exception as e:
+                await interaction.followup.send(content=f"Could not create session: {e!s}"[:1900])
+                return
+
+            session_id = session.get("session_id") or session.get("id") or ""
+            if session_id:
+                _active_talk[user_id] = {"session_id": session_id}
+
+            lk_token = session.get("token", "")
+            lk_url = session.get("livekit_url", "")
+            lk_room = session.get("room", "")
+            viewer_base = os.environ.get("ATLAS_VIEWER_BASE_URL", "").strip().rstrip("/")
+
+            if viewer_base and lk_token and lk_url:
+                from urllib.parse import urlencode
+                qs = urlencode({"token": lk_token, "url": lk_url, "room": lk_room})
+                viewer_url = f"{viewer_base}/?{qs}"
+                await interaction.followup.send(
+                    content=(
+                        "**Your avatar session is ready!**\n\n"
+                        f"[Talk to Avatar]({viewer_url})\n\n"
+                        "Click the link to open the viewer — you can talk with your mic "
+                        "and see the avatar respond in real time.\n\n"
+                        "Use `/endtalk` when you're done (stops billing)."
+                    ),
+                )
+            else:
+                if session_id:
+                    _active_talk.pop(user_id, None)
+                    try:
+                        await asyncio.to_thread(_leave_session, session_id)
+                    except Exception:
+                        pass
+                await interaction.followup.send(
+                    content=(
+                        "Realtime sessions require a viewer.\n\n"
+                        "1. Deploy [atlas-avatar-viewer]"
+                        "(https://github.com/NorthModelLabs/atlas-avatar-viewer)\n"
+                        "2. Set `ATLAS_VIEWER_BASE_URL` in your `.env`\n"
+                        "3. Restart the bot and try `/talk` again"
+                    ),
+                )
+
+    @bot.tree.command(
+        name="endtalk",
+        description="Close your active realtime avatar session (stops billing).",
+    )
+    @_guild_decorator
+    async def endtalk_cmd(interaction: discord.Interaction) -> None:
+        user_id = interaction.user.id
+        existing = _active_talk.pop(user_id, None)
+        if not existing:
+            await interaction.response.send_message("No active session to close.", ephemeral=True)
+            return
+        sid = existing.get("session_id", "")
+        await interaction.response.defer(thinking=True)
+        try:
+            await asyncio.to_thread(_leave_session, sid)
+            await interaction.followup.send(
+                content=f"Session {sid[:12]}… closed. Use `/talk` to start a new one.",
+            )
+        except Exception as e:
+            await interaction.followup.send(content=f"Tried to close session: {e!s}"[:1900])
+
     @bot.event
     async def on_message(message: discord.Message) -> None:
         # Log before message_content early-return so we can see if MESSAGE_CREATE reaches this process.
@@ -605,9 +730,11 @@ def main() -> int:
     @bot.event
     async def on_ready() -> None:
         assert bot.user is not None
+        viewer = os.environ.get("ATLAS_VIEWER_BASE_URL", "").strip()
         print(
-            "discord_avatar_bot: /ask=Claude + **Answer:** + MP4; @mention=same as /ask; "
-            "/generate=verbatim; reply-to-bot=LLM+MP4.",
+            "discord_avatar_bot: /ask=Claude + MP4; /generate=verbatim; "
+            f"/talk={'viewer → ' + viewer if viewer else 'NO ATLAS_VIEWER_BASE_URL'}; "
+            "@mention=same as /ask; reply-to-bot=LLM+MP4.",
             flush=True,
         )
         print(f"Logged in as {bot.user} (id={bot.user.id})", flush=True)
